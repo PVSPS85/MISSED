@@ -1,0 +1,26 @@
+{
+  "name": "extension",
+  "version": "1.0.0",
+  "description": "The MISSED. Chrome Extension provides two primary companion interfaces: 1. **Extension Action Popup:** Quick-action launcher for uploading exported chats, selecting page context, and navigating to the full analysis experience. 2. **Side Panel Assistant:** Persistent side panel providing context-bound question answering, source citations, and evidence inspection against the provided conversation.",
+  "main": "index.js",
+  "scripts": {
+    "build": "vite build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/chrome": "^0.3.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}
