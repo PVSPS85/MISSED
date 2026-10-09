@@ -50,12 +50,16 @@ MISSED. provides an evidence-first, neo-brutalist workspace that extracts what m
   - **Evidence Drawer:** Slide-over source inspection for citation verification.
   - **Local Handoff:** Token-based handoff modal for launching the web workspace securely.
 
-### Planned for Next Phase (Backend & AI Integration)
-- Loopback Node.js service (`127.0.0.1:8443`) for local processing.
-- Ollama local model integration (`http://127.0.0.1:11434`) and provider adapter.
+### Backend Service (Implemented)
+- Loopback Node.js service (`localhost:3001`) for local processing.
+- REST API exposing `submit`, `status`, `result`, and `purge` endpoints.
+- Modular AI provider architecture (`AIProvider`).
+- Ollama local model integration (`http://127.0.0.1:11434`) configured to safely detect availability without fabricating responses.
+
+### Planned for Next Phase (Parsing & Extension)
 - Deterministic NLP parser for WhatsApp iOS/Android formats.
 - Extension Manifest V3 background scripts and content extraction.
-
+- End-to-End LLM prompt refinement for rigorous JSON schema compliance.
 ---
 
 ## 3. Current Folder Structure
@@ -77,8 +81,15 @@ MISSED/
 │   ├── tsconfig.json             # TypeScript paths configuration
 │   └── vite.config.ts            # Vite configuration
 │
-├── backend/
-│   └── README.md                 # Backend architecture, loopback contracts, and privacy specs
+├── backend/                      # Node.js Express backend service
+│   ├── src/
+│   │   ├── core/                 # Conversation parsing logic
+│   │   ├── routes/               # API routes (analysis)
+│   │   ├── services/             # AI Provider implementations (Ollama)
+│   │   └── index.ts              # Express server entry
+│   ├── package.json              # Backend dependencies
+│   ├── tsconfig.json             # TypeScript configuration
+│   └── README.md                 # Backend architecture and specs
 │
 ├── extension/
 │   └── README.md                 # Chrome extension Manifest V3 roadmap and handoff specs
@@ -139,6 +150,6 @@ npm run build
 
 ## 6. Privacy & Current Limitations
 
-- **Current Status:** Frontend integration complete and verified. No backend or external AI provider is connected yet.
-- **Privacy Guarantee:** All current operations run 100% in browser memory. No network requests are made off-device.
-- **Preview Behavior:** Live analysis is marked `ENGINE UNAVAILABLE`. Only the opt-in *Design Preview* mode displays illustrative mock data to facilitate design inspection.
+- **Current Status:** Frontend integration is complete. The Backend API is implemented locally and the frontend connects to it.
+- **Privacy Guarantee:** All current operations run 100% on the local machine (`localhost`). No network requests are made to remote cloud providers (using local Ollama if available).
+- **Preview Behavior:** If the local AI provider is unavailable, the system safely reports `ENGINE UNAVAILABLE`. Only the opt-in *Design Preview* mode displays illustrative mock data.

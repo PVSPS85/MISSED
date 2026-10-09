@@ -147,8 +147,15 @@ MISSED/
 
 ---
 
-## 7. Outstanding Tasks Before Backend Phase
+## 7. Outstanding Tasks & Next Steps
 
 - Frontend website screens and extension suite UI are 100% integrated and verified.
-- Backend implementation will commence in the next phase upon user instruction.
-- Figma export directory (`Gamified Resume Design/`) is preserved safely until final user confirmation.
+- **Backend Node.js API (Local)** is implemented with Express, providing routes for submission, status tracking, result polling, and data purging.
+- **Modular AI Interface** is implemented (`AIProvider` and `OllamaProvider`), currently configured to detect a local Ollama instance and use it without fabricating responses.
+- **Frontend Integration:** `ClientAnalysisService` in the frontend has been successfully migrated to fetch data from the live local backend (`http://localhost:3001/api/analysis`), instead of stubbing memory states.
+
+**Next Steps:**
+- Handle edge cases in text parsing.
+- Refine the LLM extraction prompt to reliably return the strict JSON schema required by our `AnalysisResult` contract.
+- Test end-to-end integration with a real, running Ollama model.
+- Implement the Chrome extension's side-panel communication to post messages directly to the local backend.

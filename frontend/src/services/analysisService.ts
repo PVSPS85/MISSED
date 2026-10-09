@@ -21,55 +21,48 @@ export const INITIAL_STAGES: StageStatus[] = [
 ];
 
 export class ClientAnalysisService implements AnalysisServiceContract {
-  private activeJobs = new Map<string, { input: ConversationInput; status: AnalysisStatus }>();
+  private baseUrl = 'http://localhost:3001/api/analysis';
 
   async submitConversation(input: ConversationInput): Promise<{ jobId: string }> {
-    const jobId = `job-${Date.now()}`;
-    const stages: StageStatus[] = INITIAL_STAGES.map((s, idx) => ({
-      ...s,
-      state: idx === 0 ? 'active' : 'pending'
-    }));
-
-    this.activeJobs.set(jobId, {
-      input,
-      status: {
-        jobId,
-        stages,
-        currentStage: 'preparing',
-        isCompleted: false,
-        isFailed: false
-      }
+    const response = await fetch(`${this.baseUrl}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input)
     });
 
-    return { jobId };
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to submit conversation: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   async getAnalysisStatus(jobId: string): Promise<AnalysisStatus> {
-    const job = this.activeJobs.get(jobId);
-    if (!job) {
-      throw new Error(`Job ${jobId} not found`);
+    const response = await fetch(`${this.baseUrl}/status/${jobId}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to fetch status: ${response.statusText}`);
     }
-    return job.status;
+    return response.json();
   }
 
   async getAnalysisResult(jobId: string): Promise<AnalysisResult> {
-    const job = this.activeJobs.get(jobId);
-    if (!job) {
-      throw new Error(`Job ${jobId} not found`);
+    const response = await fetch(`${this.baseUrl}/result/${jobId}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to fetch result: ${response.statusText}`);
     }
-    throw new Error('Analysis engine is currently unavailable. Backend integration pending.');
+    return response.json();
   }
 
   async cancelAnalysis(jobId: string): Promise<void> {
-    const job = this.activeJobs.get(jobId);
-    if (job) {
-      job.status.isFailed = true;
-      job.status.errorMessage = 'Analysis cancelled by user.';
-    }
+    // Optionally implement cancel on backend, for now just throwing local error is handled differently
+    console.warn('Cancel analysis not fully implemented on backend yet.');
   }
 
   async purgeAllData(): Promise<void> {
-    this.activeJobs.clear();
+    await fetch(`${this.baseUrl}/purge`, { method: 'DELETE' }).catch(() => {});
     if (typeof window !== 'undefined') {
       sessionStorage.clear();
       localStorage.clear();
