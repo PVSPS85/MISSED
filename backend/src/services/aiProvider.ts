@@ -11,4 +11,9 @@ export interface AIProvider {
    * We will refine this into multiple calls or a structured extraction call.
    */
   analyzeConversation(messages: SourceMessage[], onProgress: (stage: string) => void): Promise<any>;
+
+  /**
+   * Chat with the assistant using the conversation context.
+   */
+  chat(question: string, context: string): Promise<any>;
 }

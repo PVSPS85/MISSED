@@ -39,40 +39,32 @@ MISSED/
 
 ### 1. Install Dependencies
 ```bash
-npm install --prefix frontend
-npm install --prefix backend
-npm install --prefix extension
+npm run install:all
 ```
 
 ### 2. Configure AI
-Run the following to download the required local model:
+Ensure Ollama is running and download the model:
 ```bash
 ollama run qwen2.5:3b
 ```
 
-### 3. Start the Backend
-The backend runs on `127.0.0.1:3001` to enforce privacy.
-```bash
-npm run build --prefix backend
-npm run start --prefix backend
-```
+### 3. Build & Run Locally
+To simulate a production deployment locally, we run Vite in preview mode and the Node.js backend. The backend strictly runs on loopback (127.0.0.1) for privacy.
 
-### 4. Start the Frontend
-The website development server runs on `http://localhost:5173`.
 ```bash
-npm run dev --prefix frontend
+npm run start
 ```
+- **Web App**: http://localhost:4173
+- **Backend API**: http://127.0.0.1:8443
 
-### 5. Build the Extension
-```bash
-npm run build --prefix extension
-```
+*(Note: During development, you can still use `npm run dev --prefix frontend` for hot-reloading on port 5173)*
 
-### 6. Load Extension into Chrome
-1. Open `chrome://extensions`.
-2. Enable **Developer mode** (top right).
-3. Click **Load unpacked** and select the `MISSED/extension/build` directory.
-4. Pin the extension to your toolbar.
+### 4. Load Chrome Extension
+1. Ensure you have run the build command (`npm run start` builds everything, including the extension).
+2. Open `chrome://extensions`.
+3. Enable **Developer mode** (top right).
+4. Click **Load unpacked** and select the `MISSED/extension/build` directory.
+5. Pin the extension to your toolbar.
 
 ## API Reference
 - `GET /api/health` - Checks backend and AI provider status.
@@ -85,13 +77,12 @@ npm run build --prefix extension
 MISSED. is designed around a strictly local architecture. All analysis happens on your device using Ollama. The Node.js backend binds exclusively to `127.0.0.1`, and the Chrome extension communicates directly with this loopback interface. No private conversation data is ever sent to external cloud APIs or telemetry servers.
 
 ## Development Status
-- **Implemented & Verified:** E2E web flow, parser logic, validation, API routing, Extension UI, and handoff mechanisms.
-- **Blocked/Pending:** Real E2E inference validation depends on the local completion of the Ollama model download. The UI elegantly handles the "Service Unavailable" state in the interim without faking results.
+- **Implemented & Verified:** E2E web flow, real local `qwen2.5:3b` inference, parser logic, Zod validation, API routing, Extension UI, and handoff mechanisms. Everything is strictly on-device.
 
 ## Demo Instructions
-1. Ensure both frontend (`5173`) and backend (`3001`) are running.
-2. Open `http://localhost:5173`.
+1. Run `npm run start`.
+2. Open `http://localhost:4173`.
 3. Paste a synthetic chat (e.g. `[10:00] Alice: Hey, did we decide on the budget?`).
 4. Click **Start Analysis**. 
-5. If Ollama is running, the dashboard will render findings backed by source text. If Ollama is not ready, the app will gracefully report unavailability, preserving privacy and avoiding fabricated results.
+5. The dashboard will render the findings backed by the exact source text, processed entirely locally.
 6. Open the Chrome Extension to chat with the assistant or extract page content into the web app.

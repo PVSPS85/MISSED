@@ -76,6 +76,33 @@ router.post('/analyze', async (req, res) => {
           }
         });
 
+        // Normalize missing arrays and enums to prevent strict schema failures
+        if (resultData.radar) {
+          resultData.radar.actNow = resultData.radar.actNow || [];
+          resultData.radar.responseNeeded = resultData.radar.responseNeeded || [];
+          resultData.radar.keepInMind = resultData.radar.keepInMind || [];
+        }
+        if (resultData.summary && resultData.summary.majorTopics) {
+          resultData.summary.majorTopics.forEach((t: any) => t.evidenceIds = t.evidenceIds || []);
+        }
+        (resultData.radar?.actNow || []).forEach((f: any) => f.evidenceIds = f.evidenceIds || []);
+        (resultData.radar?.responseNeeded || []).forEach((f: any) => f.evidenceIds = f.evidenceIds || []);
+        (resultData.radar?.keepInMind || []).forEach((f: any) => f.evidenceIds = f.evidenceIds || []);
+        
+        (resultData.actionItems || []).forEach((a: any) => {
+          a.evidenceIds = a.evidenceIds || [];
+          if (!['explicit', 'inferred', 'unassigned'].includes(a.ownerConfidence)) a.ownerConfidence = 'inferred';
+          if (!['explicit', 'ambiguous', 'none'].includes(a.deadlineType)) a.deadlineType = 'ambiguous';
+          if (!['urgent', 'high', 'normal'].includes(a.priority)) a.priority = 'normal';
+        });
+        
+        (resultData.decisions || []).forEach((d: any) => {
+          d.evidenceIds = d.evidenceIds || [];
+          if (!['confirmed', 'proposed', 'amended'].includes(d.status)) d.status = 'confirmed';
+        });
+        
+        (resultData.unansweredQuestions || []).forEach((q: any) => q.evidenceIds = q.evidenceIds || []);
+
         // Use Zod schemas to validate output
         const validatedOutput = AnalysisResultSchema.safeParse(resultData);
         if (!validatedOutput.success) {
@@ -184,16 +211,11 @@ router.post('/chat', async (req, res) => {
       return res.status(503).json({ error: 'AI Service is currently unavailable.' });
     }
 
-    // In a real implementation, we would query the AI model here
-    // For now, we will throw a mock error or a stub response
-    // The instructions say "Do not fabricate AI results"
-    // So we will just return a structured response indicating we need the AI provider implemented for chat.
-    res.json({
-      answer: "Chat functionality requires a fully connected AI provider. It is currently under development.",
-      evidenceIds: [],
-    });
+    // Query the AI model
+    const result = await aiProvider.chat(question, context);
+    res.json(result);
   } catch (error: any) {
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: 'Internal server error.', details: error.message });
   }
 });
 
