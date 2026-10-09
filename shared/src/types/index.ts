@@ -1,31 +1,40 @@
 /**
- * MISSED. — Core Types & Contracts
- * Shared across Web Application, Chrome Extension, and Analysis Engine.
- * 100% Local-First: Never contains references to remote cloud services.
+ * MISSED. — Shared Domain Types
+ * Shared across Frontend Website, Chrome Extension, and future Backend.
  */
 
-export interface NormalizedMessage {
+export interface SourceMessage {
   id: string;
   index: number;
   raw: string;
   sender: string;
   timestamp: string;
-  timestampRaw?: string;
   text: string;
   isSystem: boolean;
-  replyToSnippet?: string;
 }
 
 export type RadarPriority = 'ACT_NOW' | 'RESPONSE_NEEDED' | 'KEEP_IN_MIND';
 
-export interface RadarItem {
+export interface EvidenceReference {
+  id: string;
+  findingTitle: string;
+  category: RadarPriority | 'ACTION' | 'DECISION' | 'QUESTION';
+  basis: 'fact' | 'interpretation';
+  messageId: string;
+  messageText: string;
+  sender?: string;
+  timestamp?: string;
+  lineIndex?: number;
+  reason?: string;
+}
+
+export interface RadarFinding {
   id: string;
   category: RadarPriority;
   title: string;
   description: string;
   reason: string;
   evidenceIds: string[];
-  snippet: string;
   sender?: string;
   timestamp?: string;
 }
@@ -42,7 +51,6 @@ export interface ActionItem {
   priority: 'urgent' | 'high' | 'normal';
   evidenceIds: string[];
   rawQuote: string;
-  sender?: string;
 }
 
 export interface DecisionItem {
@@ -61,18 +69,15 @@ export interface UnansweredQuestion {
   askedBy: string;
   timestamp?: string;
   evidenceIds: string[];
-  possibleAssignee?: string;
-}
-
-export interface TopicSummary {
-  topic: string;
-  keyPoints: string[];
-  evidenceIds: string[];
 }
 
 export interface ConversationSummary {
   overview: string;
-  majorTopics: TopicSummary[];
+  majorTopics: {
+    topic: string;
+    points: string[];
+    evidenceIds: string[];
+  }[];
   participants: string[];
   totalMessages: number;
   timespan: {
@@ -84,33 +89,50 @@ export interface ConversationSummary {
 export interface AnalysisResult {
   id: string;
   createdAt: string;
-  engine: 'local-rules' | 'ollama';
-  modelUsed?: string;
-  engineNote: string;
+  engine: 'rule-based' | 'model-ai';
+  isSampleData: boolean;
   summary: ConversationSummary;
   radar: {
-    actNow: RadarItem[];
-    responseNeeded: RadarItem[];
-    keepInMind: RadarItem[];
+    actNow: RadarFinding[];
+    responseNeeded: RadarFinding[];
+    keepInMind: RadarFinding[];
   };
   actionItems: ActionItem[];
   decisions: DecisionItem[];
   unansweredQuestions: UnansweredQuestion[];
-  messages: NormalizedMessage[];
+  messages: SourceMessage[];
+  evidenceStore: Record<string, EvidenceReference>;
 }
 
-export interface ParseResult {
-  success: boolean;
-  messages: NormalizedMessage[];
-  formatDetected: string;
-  parseWarnings: string[];
-  rawLineCount: number;
+export type ProgressStage =
+  | 'preparing'
+  | 'reading'
+  | 'finding-signal'
+  | 'building-catchup'
+  | 'verifying-evidence';
+
+export type StageState = 'pending' | 'active' | 'completed' | 'failed' | 'unavailable';
+
+export interface StageStatus {
+  id: ProgressStage;
+  label: string;
+  state: StageState;
+  detail?: string;
 }
 
-export interface OllamaHealthStatus {
-  isAvailable: boolean;
-  version?: string;
-  availableModels: string[];
-  activeModel?: string;
+export interface AnalysisStatus {
+  jobId: string;
+  stages: StageStatus[];
+  currentStage: ProgressStage;
+  isCompleted: boolean;
+  isFailed: boolean;
   errorMessage?: string;
+}
+
+export interface ConversationInput {
+  rawText: string;
+  fileName?: string;
+  fileSize?: string;
+  sourceType: 'paste' | 'upload' | 'extension-page';
+  isSamplePreview?: boolean;
 }

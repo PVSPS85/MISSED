@@ -1,32 +1,144 @@
-# React + TypeScript + Vite
+# MISSED.
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> **Catch what matters. Verify every insight.**
 
-Currently, two official plugins are available:
+MISSED. is an AI-powered micro-app built for the ProtocolX Hackathon to solve **The Unread Problem**: helping users quickly understand, prioritize, and verify critical information from overwhelming chat conversations.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 1. Project Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Modern messaging channels (WhatsApp, Slack, Telegram, Discord) generate overwhelming chat volume. Critical requests, explicit deadlines, strategic decisions, and unanswered questions are easily buried under casual chatter.
 
-## Expanding the Oxlint configuration
+MISSED. provides an evidence-first, neo-brutalist workspace that extracts what matters and links every insight back to verifiable source messages.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+---
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## 2. Implemented vs. Planned Features
+
+### Frontend Website UI (Implemented & Verified)
+- **Import Screen:**
+  - Drag-and-drop chat export upload.
+  - Browse file button with `.txt` validation.
+  - Paste text area with character counter.
+  - Real-time input validation, empty states, and feedback notices.
+  - Privacy disclosure banner.
+- **Analysis Progress Screen:**
+  - 5 evidence-first stages: *Preparing Conversation*, *Reading the Conversation*, *Finding the Signal*, *Building Your Catch-Up*, *Verifying the Evidence*.
+  - Explicit pending, active, completed, failed, and unavailable states.
+  - Return to Import and Cancel actions.
+- **Results Dashboard:**
+  - Conversation summary with participant metrics.
+  - Expandable **Attention Radar** (`ACT NOW`, `RESPONSE NEEDED`, `KEEP IN MIND`).
+  - Extracted findings list with urgency sorting.
+  - Action items with explicit deadline indicators.
+  - Confirmed decisions and agreements.
+  - Potentially unanswered questions.
+  - Search and filter controls.
+  - Clear / Delete imported data action.
+- **Evidence Explorer:**
+  - Interactive drawer displaying original message excerpt, sender, timestamp, and basis (*fact* vs. *interpretation*).
+  - Explicit evidence-unavailable states when citations cannot be verified.
+- **Design Preview Mode:**
+  - Opt-in `DESIGN PREVIEW — SAMPLE DATA` toggle allowing full UI review with illustrative data.
+  - Production mode transparently indicates `ENGINE UNAVAILABLE` with zero synthetic data.
+
+### Chrome Extension UI (Implemented & Verified)
+- **Extension Suite (`frontend/src/Extension.tsx`):**
+  - **Popup:** Toolbar action view with *Upload Chat*, *Use Current Page*, and *Open Full Analysis* actions.
+  - **Side Panel:** Chatbot-style assistant with context status, sample questions, and citation badges (`[1]`, `[2]`).
+  - **Evidence Drawer:** Slide-over source inspection for citation verification.
+  - **Local Handoff:** Token-based handoff modal for launching the web workspace securely.
+
+### Planned for Next Phase (Backend & AI Integration)
+- Loopback Node.js service (`127.0.0.1:8443`) for local processing.
+- Ollama local model integration (`http://127.0.0.1:11434`) and provider adapter.
+- Deterministic NLP parser for WhatsApp iOS/Android formats.
+- Extension Manifest V3 background scripts and content extraction.
+
+---
+
+## 3. Current Folder Structure
+
+```
+MISSED/
+├── frontend/                     # React 19 + Tailwind v4 + Vite web application
+│   ├── src/
+│   │   ├── App.tsx               # Website UI (Import, Progress, Dashboard, Evidence)
+│   │   ├── Extension.tsx         # Chrome Extension UI (Popup, Side Panel, Handoff)
+│   │   ├── index.css             # Tailwind v4 & Amber Walnut Morning design tokens
+│   │   ├── main.tsx              # React entry point
+│   │   ├── vite-env.d.ts         # Environment types
+│   │   └── services/
+│   │       └── analysisService.ts# Analysis service interface implementation
+│   ├── public/
+│   ├── index.html                # HTML entry
+│   ├── package.json              # Frontend dependencies
+│   ├── tsconfig.json             # TypeScript paths configuration
+│   └── vite.config.ts            # Vite configuration
+│
+├── backend/
+│   └── README.md                 # Backend architecture, loopback contracts, and privacy specs
+│
+├── extension/
+│   └── README.md                 # Chrome extension Manifest V3 roadmap and handoff specs
+│
+├── shared/
+│   └── src/
+│       ├── types/
+│       │   └── index.ts          # Shared TypeScript domain contracts
+│       └── contracts/
+│           └── analysis.ts       # Analysis service interface
+│
+├── tests/                        # Test suite directory
+├── package.json                  # Root delegate scripts
+├── .gitignore                    # Git ignore configuration
+├── .env.example                  # Environment configuration template
+├── prompt.md                     # Permanent AI development log
+└── README.md                     # Project documentation
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## 4. Setup & Running Instructions
+
+### Prerequisites
+- Node.js `v18+` (Tested on `v25.9.0`)
+- npm `v9+` (Tested on `11.12.1`)
+
+### Quick Start
+```bash
+# Install frontend dependencies
+npm --prefix frontend install
+
+# Start development server
+npm run dev
+# Or from frontend folder:
+# cd frontend && npm run dev
+
+# Run production build check
+npm run build
+```
+
+---
+
+## 5. Design System
+
+- **Palette:** Amber Walnut Morning
+  - Burnt amber: `#B96B43`
+  - Dark walnut: `#4A403B`
+  - Mist: `#EBF0EF`
+  - Warm clay: `#C98F70`
+  - Sand: `#CCB499`
+  - Deep ink: `#211C19`
+  - Warm off-white: `#F7F5F0`
+- **Typography:** Display: `Space Grotesk`, Body: `DM Sans`
+- **Styling:** Thick solid borders (2px), hard offset drop shadows (`5px 5px 0 #211C19`), responsive desktop & mobile layouts.
+
+---
+
+## 6. Privacy & Current Limitations
+
+- **Current Status:** Frontend integration complete and verified. No backend or external AI provider is connected yet.
+- **Privacy Guarantee:** All current operations run 100% in browser memory. No network requests are made off-device.
+- **Preview Behavior:** Live analysis is marked `ENGINE UNAVAILABLE`. Only the opt-in *Design Preview* mode displays illustrative mock data to facilitate design inspection.
