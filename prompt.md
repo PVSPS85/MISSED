@@ -39,6 +39,7 @@
 ### Phase 4-7: Chrome Extension
 **Goal:** Build a cohesive Chrome extension with side panel and popup.
 **Implementation:** Initialized Vite React app in `/extension`. Added side panel chat backed by `/api/chat`. Added page extraction handoff to `localhost:5173/?jobId=...`.
+*Fix applied:* Removed non-existent icon references from `manifest.json` which were preventing successful manual loading into Chrome when the user loaded the `dist` folder.
 **Status:** ✅ Implemented and manually verifiable.
 
 ### Phase 8: Final QA
