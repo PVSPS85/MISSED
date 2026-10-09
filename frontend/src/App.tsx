@@ -1902,8 +1902,60 @@ export default function App() {
     }
   }
 
-  // Cleanup poll on unmount
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlJobId = urlParams.get('jobId')
+    
+    if (urlJobId) {
+      setImportStatus("idle")
+      setFileName("Context passed from extension")
+      setView("progress")
+      
+      // Start polling
+      if (pollTimer.current) window.clearInterval(pollTimer.current)
+      
+      pollTimer.current = window.setInterval(async () => {
+        try {
+          const status = await analysisService.current.getJobStatus(urlJobId)
+          const mappedStages = status.stages.map(s => s.state)
+          
+          if (status.isFailed) {
+            if (pollTimer.current) window.clearInterval(pollTimer.current)
+            setAnalysisState({
+              phase: status.errorMessage?.includes("AI Service is currently unavailable") ? "unavailable" : "failed",
+              stages: mappedStages as any,
+              activity: status.errorMessage || "Processing failed.",
+            })
+          } else if (status.isCompleted) {
+            if (pollTimer.current) window.clearInterval(pollTimer.current)
+            setAnalysisState({
+              phase: "complete",
+              stages: mappedStages as any,
+              activity: "Analysis complete.",
+            })
+            try {
+              const result = await analysisService.current.getJobResult(urlJobId)
+              setAnalysisResult(result)
+            } catch (err) {
+              setAnalysisState({ phase: "failed", stages: mappedStages as any, activity: "Failed to fetch result." })
+            }
+          } else {
+            setAnalysisState({
+              phase: "processing",
+              stages: mappedStages as any,
+              activity: status.stages.find(s => s.state === 'active')?.label || "Processing...",
+            })
+          }
+        } catch (err) {
+          if (pollTimer.current) window.clearInterval(pollTimer.current)
+          setAnalysisState({ phase: "failed", stages: Array(5).fill("failed"), activity: "Network error while polling." })
+        }
+      }, 2000)
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+    
     return () => {
       if (pollTimer.current) window.clearInterval(pollTimer.current)
     }

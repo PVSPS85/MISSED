@@ -1,163 +1,97 @@
-# MISSED.
+# MISSED. — Catch what matters. Verify every insight.
 
-> **Catch what matters. Verify every insight.**
+**Official Challenge:** The Unread Problem — "What Did I Miss?"
 
-MISSED. is an AI-powered micro-app built for the ProtocolX Hackathon to solve **The Unread Problem**: helping users quickly understand, prioritize, and verify critical information from overwhelming chat conversations.
+**The Problem:** Overwhelming chat conversations bury important decisions, deadlines, and action items, causing confusion and missed opportunities.
+**Our Approach:** MISSED. is a local-first, privacy-respecting AI micro-app and Chrome extension that digests long conversational exports, prioritizes critical information, and provides verifiable evidence pointing directly to the source text.
 
----
+## Features
+- **Conversation Import and Parsing:** Securely reads WhatsApp-style `.txt` exports. *(Implemented)*
+- **AI-Generated Conversation Summary:** Provides a high-level briefing of the chat. *(Implemented)*
+- **Attention Radar:** Categorizes urgency into 'Act now', 'Response needed', and 'Keep in mind'. *(Implemented)*
+- **Action Items and Deadlines:** Identifies tasks and due dates. *(Implemented)*
+- **Decisions and Questions:** Highlights confirmed agreements and pending inquiries. *(Implemented)*
+- **Source Evidence Validation:** Every finding points to the exact original message. *(Implemented)*
+- **Chrome Extension:** Action popup and persistent side panel assistant. *(Implemented)*
+- **Local AI Processing:** 100% on-device inference via Ollama. *(Implemented)*
 
-## 1. Project Overview
+## Technology Stack
+- **Frontend:** React, Vite, TypeScript, custom CSS.
+- **Backend:** Node.js, Express, TypeScript, Zod.
+- **Extension:** Chrome Manifest V3, built via Vite.
+- **AI:** Local Ollama (`qwen2.5:3b`).
 
-Modern messaging channels (WhatsApp, Slack, Telegram, Discord) generate overwhelming chat volume. Critical requests, explicit deadlines, strategic decisions, and unanswered questions are easily buried under casual chatter.
-
-MISSED. provides an evidence-first, neo-brutalist workspace that extracts what matters and links every insight back to verifiable source messages.
-
----
-
-## 2. Implemented vs. Planned Features
-
-### Frontend Website UI (Implemented & Verified)
-- **Import Screen:**
-  - Drag-and-drop chat export upload.
-  - Browse file button with `.txt` validation.
-  - Paste text area with character counter.
-  - Real-time input validation, empty states, and feedback notices.
-  - Privacy disclosure banner.
-- **Analysis Progress Screen:**
-  - 5 evidence-first stages: *Preparing Conversation*, *Reading the Conversation*, *Finding the Signal*, *Building Your Catch-Up*, *Verifying the Evidence*.
-  - Explicit pending, active, completed, failed, and unavailable states.
-  - Return to Import and Cancel actions.
-- **Results Dashboard:**
-  - Conversation summary with participant metrics.
-  - Expandable **Attention Radar** (`ACT NOW`, `RESPONSE NEEDED`, `KEEP IN MIND`).
-  - Extracted findings list with urgency sorting.
-  - Action items with explicit deadline indicators.
-  - Confirmed decisions and agreements.
-  - Potentially unanswered questions.
-  - Search and filter controls.
-  - Clear / Delete imported data action.
-- **Evidence Explorer:**
-  - Interactive drawer displaying original message excerpt, sender, timestamp, and basis (*fact* vs. *interpretation*).
-  - Explicit evidence-unavailable states when citations cannot be verified.
-- **Design Preview Mode:**
-  - Opt-in `DESIGN PREVIEW — SAMPLE DATA` toggle allowing full UI review with illustrative data.
-  - Production mode transparently indicates `ENGINE UNAVAILABLE` with zero synthetic data.
-
-### Chrome Extension UI (Implemented & Verified)
-- **Extension Suite (`frontend/src/Extension.tsx`):**
-  - **Popup:** Toolbar action view with *Upload Chat*, *Use Current Page*, and *Open Full Analysis* actions.
-  - **Side Panel:** Chatbot-style assistant with context status, sample questions, and citation badges (`[1]`, `[2]`).
-  - **Evidence Drawer:** Slide-over source inspection for citation verification.
-  - **Local Handoff:** Token-based handoff modal for launching the web workspace securely.
-
-### Backend Service & Parser (Implemented)
-- Loopback Node.js service bound securely to `127.0.0.1:3001` for guaranteed local processing.
-- REST API exposing `GET /api/health`, `POST /api/analyze`, `POST /api/chat`.
-- Deterministic NLP parser (`src/core/parser.ts`) for WhatsApp iOS/Android exports, supporting multiline extraction and robust stable IDs.
-- Strict input runtime validation using `Zod`.
-- Modular AI provider architecture (`AIProvider`).
-- Ollama local model integration (`http://127.0.0.1:11434`) configured to safely detect availability without fabricating responses.
-
-### Extension Service (Implemented)
-- Chrome Extension Manifest V3 package.
-- Action Popup and Side Panel React/Vite application.
-- Integrates securely with local `127.0.0.1:3001` backend for context-aware chat.
-
-### Verification (Implemented)
-- Strict validation across all APIs using `zod`.
-- Frontend connects strictly to local backend via `/api/analyze`.
-- Fallbacks correctly when local LLM is missing, preserving privacy.
-
----
-
-## 3. Current Folder Structure
-
+## Project Structure
 ```
 MISSED/
-├── frontend/                     # React 19 + Tailwind v4 + Vite web application
-│   ├── src/
-│   │   ├── App.tsx               # Website UI (Import, Progress, Dashboard, Evidence)
-│   │   ├── Extension.tsx         # Chrome Extension UI (Popup, Side Panel, Handoff)
-│   │   ├── index.css             # Tailwind v4 & Amber Walnut Morning design tokens
-│   │   ├── main.tsx              # React entry point
-│   │   ├── vite-env.d.ts         # Environment types
-│   │   └── services/
-│   │       └── analysisService.ts# Analysis service interface implementation
-│   ├── public/
-│   ├── index.html                # HTML entry
-│   ├── package.json              # Frontend dependencies
-│   ├── tsconfig.json             # TypeScript paths configuration
-│   └── vite.config.ts            # Vite configuration
-│
-├── backend/                      # Node.js Express backend service
-│   ├── src/
-│   │   ├── core/                 # Conversation parsing logic
-│   │   ├── routes/               # API routes (analysis)
-│   │   ├── services/             # AI Provider implementations (Ollama)
-│   │   └── index.ts              # Express server entry
-│   ├── package.json              # Backend dependencies
-│   ├── tsconfig.json             # TypeScript configuration
-│   └── README.md                 # Backend architecture and specs
-│
-├── extension/
-│   └── README.md                 # Chrome extension Manifest V3 roadmap and handoff specs
-│
-├── shared/
-│   └── src/
-│       ├── types/
-│       │   └── index.ts          # Shared TypeScript domain contracts
-│       └── contracts/
-│           └── analysis.ts       # Analysis service interface
-│
-├── tests/                        # Test suite directory
-├── package.json                  # Root delegate scripts
-├── .gitignore                    # Git ignore configuration
-├── .env.example                  # Environment configuration template
-├── prompt.md                     # Permanent AI development log
-└── README.md                     # Project documentation
+├── frontend/   # Vite React web app
+├── backend/    # Node.js API and parser
+├── extension/  # Chrome Extension V3
+├── shared/     # Zod schemas and TypeScript types
+├── prompt.md   # Chronological AI development log
+└── README.md   # Project documentation
 ```
 
----
+## Prerequisites and Setup
+- Node.js (v18+)
+- Ollama installed on macOS.
+- `qwen2.5:3b` model downloaded via Ollama.
 
-## 4. Setup & Running Instructions
-
-### Prerequisites
-- Node.js `v18+` (Tested on `v25.9.0`)
-- npm `v9+` (Tested on `11.12.1`)
-
-### Quick Start
+### 1. Install Dependencies
 ```bash
-# Install frontend dependencies
-npm --prefix frontend install
-
-# Start development server
-npm run dev
-# Or from frontend folder:
-# cd frontend && npm run dev
-
-# Run production build check
-npm run build
+npm install --prefix frontend
+npm install --prefix backend
+npm install --prefix extension
 ```
 
----
+### 2. Configure AI
+Run the following to download the required local model:
+```bash
+ollama run qwen2.5:3b
+```
 
-## 5. Design System
+### 3. Start the Backend
+The backend runs on `127.0.0.1:3001` to enforce privacy.
+```bash
+npm run build --prefix backend
+npm run start --prefix backend
+```
 
-- **Palette:** Amber Walnut Morning
-  - Burnt amber: `#B96B43`
-  - Dark walnut: `#4A403B`
-  - Mist: `#EBF0EF`
-  - Warm clay: `#C98F70`
-  - Sand: `#CCB499`
-  - Deep ink: `#211C19`
-  - Warm off-white: `#F7F5F0`
-- **Typography:** Display: `Space Grotesk`, Body: `DM Sans`
-- **Styling:** Thick solid borders (2px), hard offset drop shadows (`5px 5px 0 #211C19`), responsive desktop & mobile layouts.
+### 4. Start the Frontend
+The website development server runs on `http://localhost:5173`.
+```bash
+npm run dev --prefix frontend
+```
 
----
+### 5. Build the Extension
+```bash
+npm run build --prefix extension
+```
 
-## 6. Privacy & Current Limitations
+### 6. Load Extension into Chrome
+1. Open `chrome://extensions`.
+2. Enable **Developer mode** (top right).
+3. Click **Load unpacked** and select the `MISSED/extension/dist` directory.
+4. Pin the extension to your toolbar.
 
-- **Current Status:** Frontend integration is complete. The Backend API is implemented locally and the frontend connects to it.
-- **Privacy Guarantee:** All current operations run 100% on the local machine (`localhost`). No network requests are made to remote cloud providers (using local Ollama if available).
-- **Preview Behavior:** If the local AI provider is unavailable, the system safely reports `ENGINE UNAVAILABLE`. Only the opt-in *Design Preview* mode displays illustrative mock data.
+## API Reference
+- `GET /api/health` - Checks backend and AI provider status.
+- `POST /api/analyze` - Submit `{ rawText, sourceType }`, returns `{ jobId }`.
+- `GET /api/status/:jobId` - Poll for processing status.
+- `GET /api/result/:jobId` - Fetch the validated `AnalysisResult`.
+- `POST /api/chat` - Query the side panel assistant with context.
+
+## Privacy and Security
+MISSED. is designed around a strictly local architecture. All analysis happens on your device using Ollama. The Node.js backend binds exclusively to `127.0.0.1`, and the Chrome extension communicates directly with this loopback interface. No private conversation data is ever sent to external cloud APIs or telemetry servers.
+
+## Development Status
+- **Implemented & Verified:** E2E web flow, parser logic, validation, API routing, Extension UI, and handoff mechanisms.
+- **Blocked/Pending:** Real E2E inference validation depends on the local completion of the Ollama model download. The UI elegantly handles the "Service Unavailable" state in the interim without faking results.
+
+## Demo Instructions
+1. Ensure both frontend (`5173`) and backend (`3001`) are running.
+2. Open `http://localhost:5173`.
+3. Paste a synthetic chat (e.g. `[10:00] Alice: Hey, did we decide on the budget?`).
+4. Click **Start Analysis**. 
+5. If Ollama is running, the dashboard will render findings backed by source text. If Ollama is not ready, the app will gracefully report unavailability, preserving privacy and avoiding fabricated results.
+6. Open the Chrome Extension to chat with the assistant or extract page content into the web app.
