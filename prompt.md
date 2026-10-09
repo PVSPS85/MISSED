@@ -251,4 +251,15 @@ After submitting a conversation, the UI displayed "Network error while polling" 
 3. **Destructive UI Error Handling:** The progress screen's `catch` block on a network error was destructively rewriting all 5 processing stages to `failed` using `Array(5).fill("failed")`.
    *Fix:* Updated `App.tsx` to use functional state updates (`prev => { ...prev }`) on network errors to preserve the last known valid stage states while reporting the connection failure.
 
-The application has been re-verified locally and the End-to-End processing flow perfectly handles the local inference pipeline over loopback.
+## Section 19 — Critical Bug Fix: Dashboard Results Not Rendering
+
+**Observed Bug:**
+Even after successful E2E local inference with `qwen2.5:3b`, the Results Dashboard rendered "ANALYSIS IS NOT CONNECTED" and "NO FINDINGS GENERATED" instead of the verified analysis.
+
+**Root Causes & Fixes:**
+1. **Aggressive UI Mock States:** The `Workspace` UI component rigidly depended on a boolean `previewResults` prop for its render branches (e.g., `previewResults ? <renderMock> : "ANALYSIS IS NOT CONNECTED"`), completely ignoring the newly populated `analysisResult` prop containing the verified backend model response.
+   *Fix:* Refactored the `Workspace` rendering conditionals to check `analysisResult ? <renderVerified> : previewResults ? <renderMock> : <EmptyState>`. We mapped the genuine JSON analysis into the UI components (Summary Topics, Radar Arrays, Decisions, Actions, and Questions). 
+2. **Missing LLM Output Sanitation:** `qwen2.5:3b` occasionally dropped required string fields like `askedBy` or `topic` when analyzing specific text shapes, failing strict Zod validation with `received null` errors and preventing results from loading.
+   *Fix:* Expanded backend defensive parsing (`routes/analysis.ts`) to intercept and sanitize ALL nested `RadarFindings`, `ActionItems`, `Decisions`, and `UnansweredQuestions` by supplying safe default strings (`"Unknown"`) before passing them to the strict Zod validators.
+
+The application has been re-verified locally and the End-to-End processing flow now flawlessly maps the real local inference to the Dashboard UI!

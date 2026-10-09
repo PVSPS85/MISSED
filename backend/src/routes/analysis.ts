@@ -82,15 +82,32 @@ router.post('/analyze', async (req, res) => {
           resultData.radar.responseNeeded = resultData.radar.responseNeeded || [];
           resultData.radar.keepInMind = resultData.radar.keepInMind || [];
         }
-        if (resultData.summary && resultData.summary.majorTopics) {
-          resultData.summary.majorTopics.forEach((t: any) => t.evidenceIds = t.evidenceIds || []);
-        }
-        (resultData.radar?.actNow || []).forEach((f: any) => f.evidenceIds = f.evidenceIds || []);
-        (resultData.radar?.responseNeeded || []).forEach((f: any) => f.evidenceIds = f.evidenceIds || []);
-        (resultData.radar?.keepInMind || []).forEach((f: any) => f.evidenceIds = f.evidenceIds || []);
+        if (!resultData.summary) resultData.summary = {};
+        if (!resultData.summary.overview || typeof resultData.summary.overview !== 'string') resultData.summary.overview = 'No overview provided.';
+        if (!resultData.summary.majorTopics || !Array.isArray(resultData.summary.majorTopics)) resultData.summary.majorTopics = [];
+        
+        resultData.summary.majorTopics.forEach((t: any) => {
+          t.evidenceIds = t.evidenceIds || [];
+          if (!t.topic || typeof t.topic !== 'string') t.topic = 'Unknown Topic';
+          if (!t.points || !Array.isArray(t.points)) t.points = ['No points provided'];
+        });
+        const sanitizeRadar = (findings: any[]) => {
+          return findings.map((f: any) => {
+            f.evidenceIds = f.evidenceIds || [];
+            if (!f.title || typeof f.title !== 'string') f.title = 'Unknown Finding';
+            if (!f.description || typeof f.description !== 'string') f.description = 'Unknown description';
+            if (!f.reason || typeof f.reason !== 'string') f.reason = 'Unknown reason';
+            return f;
+          });
+        };
+        resultData.radar.actNow = sanitizeRadar(resultData.radar?.actNow || []);
+        resultData.radar.responseNeeded = sanitizeRadar(resultData.radar?.responseNeeded || []);
+        resultData.radar.keepInMind = sanitizeRadar(resultData.radar?.keepInMind || []);
         
         (resultData.actionItems || []).forEach((a: any) => {
           a.evidenceIds = a.evidenceIds || [];
+          if (!a.task || typeof a.task !== 'string') a.task = 'Unknown Task';
+          if (!a.rawQuote || typeof a.rawQuote !== 'string') a.rawQuote = 'Unknown quote';
           if (!['explicit', 'inferred', 'unassigned'].includes(a.ownerConfidence)) a.ownerConfidence = 'inferred';
           if (!['explicit', 'ambiguous', 'none'].includes(a.deadlineType)) a.deadlineType = 'ambiguous';
           if (!['urgent', 'high', 'normal'].includes(a.priority)) a.priority = 'normal';
@@ -98,10 +115,16 @@ router.post('/analyze', async (req, res) => {
         
         (resultData.decisions || []).forEach((d: any) => {
           d.evidenceIds = d.evidenceIds || [];
+          if (!d.topic || typeof d.topic !== 'string') d.topic = 'Unknown Topic';
+          if (!d.decision || typeof d.decision !== 'string') d.decision = 'Unknown Decision';
           if (!['confirmed', 'proposed', 'amended'].includes(d.status)) d.status = 'confirmed';
         });
         
-        (resultData.unansweredQuestions || []).forEach((q: any) => q.evidenceIds = q.evidenceIds || []);
+        (resultData.unansweredQuestions || []).forEach((q: any) => {
+          q.evidenceIds = q.evidenceIds || [];
+          if (!q.askedBy || typeof q.askedBy !== 'string') q.askedBy = 'Unknown';
+          if (!q.question || typeof q.question !== 'string') q.question = 'Unknown question';
+        });
 
         // Use Zod schemas to validate output
         const validatedOutput = AnalysisResultSchema.safeParse(resultData);

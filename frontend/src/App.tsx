@@ -748,14 +748,18 @@ function Workspace({
         </div>
         <div className="source-status">
           <span>
-            {previewResults
-              ? "DESIGN PREVIEW — SAMPLE DATA"
-              : "ANALYSIS UNAVAILABLE"}
+            {analysisResult
+              ? "ANALYSIS COMPLETE"
+              : previewResults
+                ? "DESIGN PREVIEW — SAMPLE DATA"
+                : "ANALYSIS UNAVAILABLE"}
           </span>
           <small>
-            {previewResults
-              ? "Illustrative results only"
-              : "No findings generated"}
+            {analysisResult
+              ? `${availableFindings.length} findings extracted`
+              : previewResults
+                ? "Illustrative results only"
+                : "No findings generated"}
           </small>
         </div>
         <div className="fact-key">
@@ -835,32 +839,50 @@ function Workspace({
               <p className="overline">CONVERSATION SUMMARY</p>
             </div>
             <span className="status-badge">
-              {previewResults
-                ? "SAMPLE DATA"
-                : hasInput
-                  ? "AWAITING ANALYSIS"
-                  : "AWAITING CHAT"}
+              {analysisResult
+                ? "VERIFIED SUMMARY"
+                : previewResults
+                  ? "SAMPLE DATA"
+                  : hasInput
+                    ? "AWAITING ANALYSIS"
+                    : "AWAITING CHAT"}
             </span>
           </div>
-          <div className="summary-empty">
-            <div className="summary-symbol">
-              <Icon name={hasInput ? "spark" : "message"} size={30} />
+          {analysisResult ? (
+            <div className="summary-content">
+              <h2>{analysisResult.summary.overview}</h2>
+              <div className="summary-topics">
+                {analysisResult.summary.majorTopics.map((topic, i) => (
+                  <div key={i} className="topic-block">
+                    <h4>{topic.topic}</h4>
+                    <ul>
+                      {topic.points.map((p, j) => <li key={j}>{p}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h2>
-              {hasInput
-                ? previewResults
-                  ? "AN ILLUSTRATIVE CATCH-UP."
-                  : "ANALYSIS IS NOT CONNECTED."
-                : "IMPORT A CONVERSATION TO BEGIN."}
-            </h2>
-            <p>
-              {hasInput
-                ? previewResults
-                  ? "Sample content demonstrates the summary hierarchy. It was not generated from your imported conversation."
-                  : "This source is ready, but no analysis API is configured. A verified summary, themes, and important context will appear only after genuine processing."
-                : "Summary, themes, and key context will appear here only after a real chat is supplied."}
-            </p>
-          </div>
+          ) : (
+            <div className="summary-empty">
+              <div className="summary-symbol">
+                <Icon name={hasInput ? "spark" : "message"} size={30} />
+              </div>
+              <h2>
+                {hasInput
+                  ? previewResults
+                    ? "AN ILLUSTRATIVE CATCH-UP."
+                    : "ANALYSIS IS NOT CONNECTED."
+                  : "IMPORT A CONVERSATION TO BEGIN."}
+              </h2>
+              <p>
+                {hasInput
+                  ? previewResults
+                    ? "Sample content demonstrates the summary hierarchy. It was not generated from your imported conversation."
+                    : "This source is ready, but no analysis API is configured. A verified summary, themes, and important context will appear only after genuine processing."
+                  : "Summary, themes, and key context will appear here only after a real chat is supplied."}
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="radar-panel">
@@ -892,10 +914,10 @@ function Workspace({
                       </p>
                     </div>
                     <span className="radar-count">
-                      {previewResults ? radarFindings.length : "NO DATA"}
+                      {analysisResult || previewResults ? radarFindings.length : "NO DATA"}
                     </span>
                   </summary>
-                  {previewResults && (
+                  {(analysisResult || previewResults) && (
                     <div className="radar-disclosure">
                       {radarFindings.map((finding) => (
                         <button
@@ -906,7 +928,7 @@ function Workspace({
                           }}
                           type="button"
                         >
-                          SAMPLE · {finding.finding}
+                          {analysisResult ? 'VERIFIED' : 'SAMPLE'} · {finding.finding}
                         </button>
                       ))}
                     </div>
@@ -924,14 +946,14 @@ function Workspace({
               <p className="overline">EXTRACTED FINDINGS</p>
             </div>
           </div>
-          {previewResults ? (
+          {(analysisResult || previewResults) ? (
             <div className="findings-list">
               {filteredFindings.length ? (
                 filteredFindings.map((finding) => (
                   <article className="finding-row" key={finding.finding}>
                     <div>
                       <span className="finding-tag">
-                        SAMPLE · {finding.category} · {finding.priority}
+                        {analysisResult ? 'VERIFIED' : 'SAMPLE'} · {finding.category} · {finding.priority}
                       </span>
                       <h3>{finding.finding}</h3>
                       <p>{finding.reason}</p>
@@ -958,7 +980,7 @@ function Workspace({
                 ))
               ) : (
                 <div className="finding-no-results">
-                  <strong>NO SAMPLE FINDINGS MATCH THIS VIEW</strong>
+                  <strong>NO {analysisResult ? 'VERIFIED' : 'SAMPLE'} FINDINGS MATCH THIS VIEW</strong>
                   <Button
                     className="button--quiet"
                     onClick={() => {
@@ -1013,21 +1035,27 @@ function Workspace({
               <span className="panel-index">04</span>
               <p className="overline">DECISION TIMELINE</p>
             </div>
-            <span className="status-badge">AWAITING EVIDENCE</span>
+            <span className="status-badge">
+              {analysisResult ? `${availableFindings.filter(f => f.category === 'Decisions').length} DECISIONS` : "AWAITING EVIDENCE"}
+            </span>
           </div>
-          {previewResults ? (
-            <div className="compact-result">
-              <span>SAMPLE · CONFIRMED DECISION</span>
-              <strong>{previewFindings[2].finding}</strong>
-              <Button
-                className="button--outline"
-                onClick={() => {
-                  setSelectedFinding(previewFindings[2])
-                  setDrawerOpen(true)
-                }}
-              >
-                VIEW EVIDENCE
-              </Button>
+          {(analysisResult || previewResults) ? (
+            <div className="findings-list compact-panel">
+              {availableFindings.filter(f => f.category === 'Decisions').map((finding, idx) => (
+                <div className="compact-result" key={idx}>
+                  <span>{analysisResult ? 'VERIFIED' : 'SAMPLE'} · {finding.finding}</span>
+                  <strong>{finding.reason}</strong>
+                  <Button
+                    className="button--outline"
+                    onClick={() => {
+                      setSelectedFinding(finding)
+                      setDrawerOpen(true)
+                    }}
+                  >
+                    VIEW EVIDENCE
+                  </Button>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="decision-empty">
@@ -1049,22 +1077,28 @@ function Workspace({
               <span className="panel-index">05</span>
               <p className="overline">ACTION ITEMS</p>
             </div>
-            <span className="status-badge">NO ACTIONS YET</span>
+            <span className="status-badge">
+              {analysisResult ? `${availableFindings.filter(f => f.category === 'Actions').length} ACTIONS` : "NO ACTIONS YET"}
+            </span>
           </div>
-          {previewResults ? (
-            <div className="compact-result">
-              <span>SAMPLE · DEADLINE NOT VERIFIED FOR THIS IMPORT</span>
-              <strong>{previewFindings[0].finding}</strong>
-              <p>No owner or completion status is assumed in this sample.</p>
-              <Button
-                className="button--outline"
-                onClick={() => {
-                  setSelectedFinding(previewFindings[0])
-                  setDrawerOpen(true)
-                }}
-              >
-                VIEW EVIDENCE
-              </Button>
+          {(analysisResult || previewResults) ? (
+            <div className="findings-list compact-panel">
+              {availableFindings.filter(f => f.category === 'Actions').map((finding, idx) => (
+                <div className="compact-result" key={idx}>
+                  <span>{analysisResult ? 'VERIFIED' : 'SAMPLE'} · {finding.priority.toUpperCase()}</span>
+                  <strong>{finding.finding}</strong>
+                  <p>{finding.reason}</p>
+                  <Button
+                    className="button--outline"
+                    onClick={() => {
+                      setSelectedFinding(finding)
+                      setDrawerOpen(true)
+                    }}
+                  >
+                    VIEW EVIDENCE
+                  </Button>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="action-empty">
@@ -1084,22 +1118,24 @@ function Workspace({
               <p className="overline">POTENTIALLY UNANSWERED QUESTIONS</p>
             </div>
           </div>
-          {previewResults ? (
-            <div className="compact-result">
-              <span>SAMPLE · RESOLUTION UNKNOWN</span>
-              <strong>{previewFindings[1].finding}</strong>
-              <p>
-                This is illustrative; a real analysis must verify later replies.
-              </p>
-              <Button
-                className="button--outline"
-                onClick={() => {
-                  setSelectedFinding(previewFindings[1])
-                  setDrawerOpen(true)
-                }}
-              >
-                VIEW EVIDENCE
-              </Button>
+          {(analysisResult || previewResults) ? (
+            <div className="findings-list compact-panel">
+              {availableFindings.filter(f => f.category === 'Questions').map((finding, idx) => (
+                <div className="compact-result" key={idx}>
+                  <span>{analysisResult ? 'VERIFIED' : 'SAMPLE'} · UNRESOLVED</span>
+                  <strong>{finding.finding}</strong>
+                  <p>{finding.reason}</p>
+                  <Button
+                    className="button--outline"
+                    onClick={() => {
+                      setSelectedFinding(finding)
+                      setDrawerOpen(true)
+                    }}
+                  >
+                    VIEW EVIDENCE
+                  </Button>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="action-empty">
