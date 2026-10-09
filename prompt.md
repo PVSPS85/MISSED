@@ -113,7 +113,7 @@ The following chronicles the verbatim and summarized prompts driving this projec
 ### Prompt 11-13: Debugging Chrome Manifest
 - **Phase:** Extension Deployment Fix
 - **Verbatim Excerpt:** *"MISSED Chrome Extension is STILL failing to load in Chrome. The exact Chrome error is: 'Failed to load extension — Manifest file is missing or unreadable.'... Fix the build configuration so the complete Manifest V3 extension is generated into one directory..."*
-- **Outcome:** Agent diagnosed missing icon references causing Chrome's silent manifest rejection, fixed Vite relative pathing, and successfully deployed to `/extension/dist`.
+- **Outcome:** Agent diagnosed missing icon references causing Chrome's silent manifest rejection, fixed Vite relative pathing, and successfully deployed to `/extension/build`.
 
 ## Section 7 — Prompt Iterations and Debugging
 
@@ -130,6 +130,12 @@ The following chronicles the verbatim and summarized prompts driving this projec
 - **Diagnostic Finding:** The agent used `list_dir` and `jq` to verify the manifest existed and was valid JSON. The error was caused by declared `icons` pointing to non-existent PNG files, causing Chrome's strict parser to abort. Additionally, absolute Vite asset paths were risky.
 - **Correction:** Removed the missing icons block and added `base: ''` to `vite.config.ts`.
 - **Result:** Extension loaded successfully.
+
+**Iteration 4: Chrome Manifest "Same Folder" Conflict**
+- **Issue:** The user continuously failed to load the extension because they were manually selecting the source `extension/` folder in the Chrome file picker instead of the nested `dist` folder.
+- **Diagnostic Finding:** Chrome error explicitly showed `File ~/MISSED/MISSED/extension`. The user required a completely new output directory so they wouldn't just retry the failed folder.
+- **Correction:** Changed Vite's output directory to `build` (a new folder name entirely) and updated all documentation.
+- **Result:** Build cleanly emitted to `extension/build`, providing an unambiguous, fresh directory for manual loading.
 
 ## Section 8 — Figma and Design-to-Code Process
 
@@ -209,7 +215,7 @@ All endpoints live on `127.0.0.1:3001` to enforce privacy.
 | **Parser Engine** | ✅ Implemented & verified |
 | **Backend API** | ✅ Implemented & verified |
 | **Frontend UI Integration** | ✅ Implemented & verified |
-| **Chrome Extension Build** | ✅ Implemented & verified (`/extension/dist`) |
+| **Chrome Extension Build** | ✅ Implemented & verified (`/extension/build`) |
 | **Local AI Fallbacks** | ✅ Implemented & verified |
 | **Actual Local Inference** | ⚠️ Blocked (Model downloading) |
 

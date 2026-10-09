@@ -71,7 +71,7 @@ npm run build --prefix extension
 ### 6. Load Extension into Chrome
 1. Open `chrome://extensions`.
 2. Enable **Developer mode** (top right).
-3. Click **Load unpacked** and select the `MISSED/extension/dist` directory.
+3. Click **Load unpacked** and select the `MISSED/extension/build` directory.
 4. Pin the extension to your toolbar.
 
 ## API Reference
