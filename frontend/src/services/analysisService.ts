@@ -21,10 +21,10 @@ export const INITIAL_STAGES: StageStatus[] = [
 ];
 
 export class ClientAnalysisService implements AnalysisServiceContract {
-  private baseUrl = 'http://localhost:3001/api/analysis';
+  private baseUrl = 'http://localhost:3001/api';
 
   async submitConversation(input: ConversationInput): Promise<{ jobId: string }> {
-    const response = await fetch(`${this.baseUrl}/submit`, {
+    const response = await fetch(`${this.baseUrl}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input)

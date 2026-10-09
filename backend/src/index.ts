@@ -13,19 +13,21 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' })); // Support large conversation text
 
 // Routes
-app.use('/api/analysis', analysisRoutes);
+app.use('/api', analysisRoutes); // We'll mount all analysis routes on /api directly to have /api/analyze
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'MISSED. Local Backend is running.' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 MISSED. Backend running on http://localhost:${PORT}`);
+// Start server bound to localhost only
+app.listen(Number(PORT), '127.0.0.1', () => {
+  console.log(`🚀 MISSED. Backend running on http://127.0.0.1:${PORT}`);
   console.log(`API Endpoints:`);
-  console.log(`- POST /api/analysis/submit`);
-  console.log(`- GET  /api/analysis/status/:jobId`);
-  console.log(`- GET  /api/analysis/result/:jobId`);
-  console.log(`- DEL  /api/analysis/purge`);
+  console.log(`- GET  /api/health`);
+  console.log(`- POST /api/analyze`);
+  console.log(`- POST /api/chat`);
+  console.log(`- GET  /api/status/:jobId`);
+  console.log(`- GET  /api/result/:jobId`);
+  console.log(`- DEL  /api/purge`);
 });

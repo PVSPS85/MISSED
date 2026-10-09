@@ -149,13 +149,15 @@ MISSED/
 
 ## 7. Outstanding Tasks & Next Steps
 
-- Frontend website screens and extension suite UI are 100% integrated and verified.
-- **Backend Node.js API (Local)** is implemented with Express, providing routes for submission, status tracking, result polling, and data purging.
-- **Modular AI Interface** is implemented (`AIProvider` and `OllamaProvider`), currently configured to detect a local Ollama instance and use it without fabricating responses.
-- **Frontend Integration:** `ClientAnalysisService` in the frontend has been successfully migrated to fetch data from the live local backend (`http://localhost:3001/api/analysis`), instead of stubbing memory states.
+## 8. Phase 1 — Backend Foundation & Parser Integration
+- **Conversation Parser:** Implemented `backend/src/core/parser.ts` to parse WhatsApp exports securely. Extracts senders, timestamps, multiline messages, and system messages with stable message IDs. Tested against synthetic fixtures via `backend/tests/parser.test.ts`.
+- **Backend API:** Bound `express` server strictly to `127.0.0.1` and applied `50mb` request size limits. Mapped exact requested routes:
+  - `GET /api/health`
+  - `POST /api/analyze` (Updated from `/submit` based on review)
+  - `POST /api/chat` (Returns honest unavailability responses without fabricating AI content)
+- **Shared Contracts:** Migrated runtime validation to `backend/src/schemas/index.ts` using `zod`. `ConversationInputSchema` intercepts invalid payloads at the router boundary.
+- **AI-Provider Architecture:** Solidified `OllamaProvider` interface. Checks for Ollama tags at `127.0.0.1:11434` and gracefully aborts if the model isn't active, enforcing the explicit local-only privacy guarantee. No remote hosted model substitution is allowed.
+- **Verification:** Backend TS compilation fixed by adopting `NodeNext`. Build completes without errors. Frontend `analysisService.ts` synced with `api/analyze` API updates seamlessly.
 
 **Next Steps:**
-- Handle edge cases in text parsing.
-- Refine the LLM extraction prompt to reliably return the strict JSON schema required by our `AnalysisResult` contract.
-- Test end-to-end integration with a real, running Ollama model.
-- Implement the Chrome extension's side-panel communication to post messages directly to the local backend.
+Proceed to Phase 2/3 and test actual LLM extraction behavior before starting on Phase 4 Chrome Extension implementation.

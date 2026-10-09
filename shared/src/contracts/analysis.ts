@@ -3,7 +3,7 @@
  * Defines client-backend interaction methods.
  */
 
-import { ConversationInput, AnalysisStatus, AnalysisResult } from '../types';
+import { ConversationInput, AnalysisStatus, AnalysisResult } from '../types/index.js';
 
 export interface AnalysisServiceContract {
   /**

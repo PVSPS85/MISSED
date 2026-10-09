@@ -1,10 +1,11 @@
-import { AIProvider } from './aiProvider';
+import { AIProvider } from './aiProvider.js';
+import { SourceMessage } from '@shared/types/index.js';
 
 export class OllamaProvider implements AIProvider {
   private baseUrl: string;
   private model: string;
 
-  constructor(baseUrl = 'http://127.0.0.1:11434', model = 'llama3') {
+  constructor(baseUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434', model = process.env.OLLAMA_MODEL || 'qwen2.5:3b') {
     this.baseUrl = baseUrl;
     this.model = model;
   }
@@ -21,12 +22,8 @@ export class OllamaProvider implements AIProvider {
     }
   }
 
-  async analyzeConversation(text: string, onProgress: (stage: string) => void): Promise<any> {
+  async analyzeConversation(messages: SourceMessage[], onProgress: (stage: string) => void): Promise<any> {
     onProgress('reading');
-    
-    // In a real implementation, we would send the text to Ollama and ask for a JSON response.
-    // For now, if Ollama is not available or we are in development, we'll wait and throw or return stub if asked.
-    // Given the instructions: "Keep the UI connected to real processing states. Do not fabricate AI responses... If AI is unavailable, show an honest message."
     
     const isReady = await this.isAvailable();
     if (!isReady) {
@@ -35,16 +32,29 @@ export class OllamaProvider implements AIProvider {
 
     onProgress('finding-signal');
     
-    // Actually call Ollama
+    // Format messages for the prompt
+    const textContext = messages.map(m => `[ID: ${m.id}] ${m.timestamp} - ${m.sender}: ${m.text}`).join('\n').substring(0, 4000);
+
     const prompt = `Analyze the following conversation and extract:
-1. A summary
-2. Action items
-3. Decisions
-4. Unanswered questions
-5. Radar findings (urgent, response needed, keep in mind)
-Respond strictly in JSON matching our schema.
+1. A summary (overview, majorTopics, participants, totalMessages, timespan)
+2. Radar findings categorized by ACT_NOW, RESPONSE_NEEDED, KEEP_IN_MIND
+3. Action items (with task, owner, deadline)
+4. Decisions
+5. Unanswered questions
+
+You MUST respond strictly in valid JSON matching this schema structure:
+{
+  "summary": { "overview": "", "majorTopics": [ { "topic": "", "points": [""], "evidenceIds": ["<id>"] } ], "participants": [""], "totalMessages": 0, "timespan": { "start": "", "end": "" } },
+  "radar": { "actNow": [], "responseNeeded": [], "keepInMind": [] },
+  "actionItems": [],
+  "decisions": [],
+  "unansweredQuestions": []
+}
+
+IMPORTANT: Only use exact [ID: ...] values from the context in your evidenceIds arrays. Do NOT invent IDs. Do NOT wrap the JSON in markdown blocks like \`\`\`json. Output ONLY raw JSON.
+
 Conversation:
-${text.substring(0, 4000)} // Truncating for safety in MVP
+${textContext}
 `;
 
     try {
@@ -56,6 +66,9 @@ ${text.substring(0, 4000)} // Truncating for safety in MVP
           prompt,
           format: 'json',
           stream: false,
+          options: {
+            temperature: 0.1
+          }
         })
       });
 
@@ -68,7 +81,13 @@ ${text.substring(0, 4000)} // Truncating for safety in MVP
       
       onProgress('verifying-evidence');
       
-      return JSON.parse(data.response);
+      let jsonStr = data.response.trim();
+      // Clean up markdown wrapping if present
+      if (jsonStr.startsWith('\`\`\`')) {
+        jsonStr = jsonStr.replace(/^\`\`\`(json)?\s*/i, '').replace(/\s*\`\`\`$/, '');
+      }
+      
+      return JSON.parse(jsonStr);
     } catch (err: any) {
       throw new Error(`Failed to process with Ollama: ${err.message}`);
     }

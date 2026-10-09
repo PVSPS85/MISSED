@@ -50,14 +50,15 @@ MISSED. provides an evidence-first, neo-brutalist workspace that extracts what m
   - **Evidence Drawer:** Slide-over source inspection for citation verification.
   - **Local Handoff:** Token-based handoff modal for launching the web workspace securely.
 
-### Backend Service (Implemented)
-- Loopback Node.js service (`localhost:3001`) for local processing.
-- REST API exposing `submit`, `status`, `result`, and `purge` endpoints.
+### Backend Service & Parser (Implemented)
+- Loopback Node.js service bound securely to `127.0.0.1:3001` for guaranteed local processing.
+- REST API exposing `GET /api/health`, `POST /api/analyze`, `POST /api/chat`.
+- Deterministic NLP parser (`src/core/parser.ts`) for WhatsApp iOS/Android exports, supporting multiline extraction and robust stable IDs.
+- Strict input runtime validation using `Zod`.
 - Modular AI provider architecture (`AIProvider`).
 - Ollama local model integration (`http://127.0.0.1:11434`) configured to safely detect availability without fabricating responses.
 
-### Planned for Next Phase (Parsing & Extension)
-- Deterministic NLP parser for WhatsApp iOS/Android formats.
+### Planned for Next Phase (Extension)
 - Extension Manifest V3 background scripts and content extraction.
 - End-to-End LLM prompt refinement for rigorous JSON schema compliance.
 ---

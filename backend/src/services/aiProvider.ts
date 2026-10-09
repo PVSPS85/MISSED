@@ -1,3 +1,5 @@
+import { SourceMessage } from '@shared/types/index.js';
+
 export interface AIProvider {
   /**
    * Checks if the AI provider is available and ready to process requests.
@@ -8,5 +10,5 @@ export interface AIProvider {
    * Summarizes the text and extracts structured information.
    * We will refine this into multiple calls or a structured extraction call.
    */
-  analyzeConversation(text: string, onProgress: (stage: string) => void): Promise<any>;
+  analyzeConversation(messages: SourceMessage[], onProgress: (stage: string) => void): Promise<any>;
 }
