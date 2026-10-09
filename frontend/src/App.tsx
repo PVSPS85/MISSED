@@ -1478,7 +1478,7 @@ function AnalysisErrorState({
   onReturn: () => void
   onComplete?: () => void
 }) {
-  if (phase === "processing") return null
+  if (phase === "processing" || phase === "analyzing") return null
   const messages = {
     unavailable: [
       "ANALYSIS API UNAVAILABLE",
