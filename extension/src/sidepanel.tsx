@@ -7,21 +7,45 @@ function RealSidepanel() {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<"ready" | "loading" | "error">("ready");
+  const [context, setContext] = useState<string>("");
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [messages, status]);
+
+  const loadContext = () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+      if (tab?.id) {
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: () => document.body.innerText,
+        }, (results) => {
+          if (results && results[0]) {
+            setContext(results[0].result);
+          }
+        });
+      }
+    });
+  };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || status === "loading") return;
     const msg = input.trim();
     setMessages(prev => [...prev, { role: 'user', content: msg }]);
     setInput("");
     setStatus("loading");
 
     try {
-      // In a real implementation, we would pass the conversation context.
-      // Since it's a hackathon demo and we have limited time, we'll query the local backend chat API directly.
       const response = await fetch("http://127.0.0.1:8443/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: msg, context: "Context missing in demo" })
+        body: JSON.stringify({ question: msg, context: context || "No context provided." })
       });
       const data = await response.json();
       
@@ -37,7 +61,7 @@ function RealSidepanel() {
     <div className="ext-panel">
       <header className="ext-header ext-header--panel">
         <Brand compact />
-        <button onClick={() => chrome.tabs.create({ url: "http://localhost:5173" })} className="icon-btn">
+        <button onClick={() => chrome.tabs.create({ url: "http://localhost:5173" })} className="icon-btn" title="Open full dashboard">
           <Icon name="spark" />
         </button>
       </header>
@@ -51,10 +75,24 @@ function RealSidepanel() {
           </div>
         </div>
         
+        {!context ? (
+          <button className="ext-context-btn" onClick={loadContext} style={{alignSelf: 'flex-start'}}>
+            + Extract Page Context
+          </button>
+        ) : (
+          <div className="ext-context">
+            <div className="ext-context-header">
+              <span>Page Context ({context.length} chars)</span>
+              <button className="ext-context-btn" onClick={() => setContext("")}>Clear</button>
+            </div>
+            {context.slice(0, 200)}...
+          </div>
+        )}
+
         <div className="ext-chat">
           {messages.map((m, i) => (
             <div key={i} className={`ext-bubble ext-bubble--${m.role}`}>
-              <p>{m.content}</p>
+              <p style={{margin: 0}}>{m.content}</p>
             </div>
           ))}
           {status === "loading" && (
@@ -62,16 +100,22 @@ function RealSidepanel() {
               <span className="ext-dot-pulse">...</span>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
       <div className="ext-prompt">
-        <input 
-          type="text" 
+        <textarea 
           value={input} 
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
           placeholder="Ask about the conversation..." 
+          style={{ resize: 'none', height: '40px' }}
         />
         <button onClick={handleSend} disabled={!input.trim() || status === "loading"}>
           <Icon name="send" />

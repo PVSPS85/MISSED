@@ -301,4 +301,13 @@ The synthetic E2E test returned `messages: 1` despite multiple lines of chat his
 *Root Cause:* The internal WhatsApp parser regex specifically looked for a date-first timestamp format (`DD/MM/YY`). Our local test data utilized a time-first layout (`[HH:MM AM, DD/MM/YYYY]`).
 *Fix:* We added a fallback regex (`timeFirstRegex`) into `backend/src/core/parser.ts` to seamlessly process time-first chat exports, enabling flawless parsing of our validation data.
 
-The entire E2E system is now 100% verified locally against real Ollama output!
+## Section 23 — Chrome Extension Side Panel Layout and Context Fixes
+
+**Observed Bug 5: Side Panel Layout Broken and Context Hardcoded**
+The extension side panel displayed conversations as unstyled long blocks of text. The chat composer input was clipped, making it hard to read and send messages. Furthermore, any question sent resulted in a standard error "I cannot answer this based on the conversation." because the side panel hardcoded the payload context to `"Context missing in demo"`. The user was forced to paste their chat directly into the message box, causing it to render as a giant unstyled bubble.
+*Root Cause:* 
+1. The `.ext-*` CSS classes used by the popup and side panel (`ext-panel`, `ext-bubble`, `ext-prompt`, etc.) were missing entirely from `frontend/src/index.css`.
+2. The side panel had no logic to dynamically extract or accept a page context.
+*Fix:*
+1. Appended a complete block of `.ext-*` layout and styling classes to `index.css`, establishing a robust column-based layout where the chat area scrolls independently from the bottom-anchored composer. Upgraded the composer from a standard text `<input>` to a `<textarea>` to support `Shift+Enter` multiline messages.
+2. Updated `sidepanel.tsx` with a robust `chrome.scripting.executeScript` method that extracts the current page context on demand via a "+ Extract Page Context" button. The extracted context is displayed cleanly in an `ext-context` preview container and is automatically injected into the local Ollama `/api/chat` payload. We added auto-scrolling so new AI replies scroll smoothly into view.

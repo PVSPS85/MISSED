@@ -682,3 +682,23 @@ button:focus-visible, summary:focus-visible { outline: 3px solid var(--amber); o
   .x-handoff__stage { grid-template-columns: 1fr; }
   .x-handoff__travel { flex-direction: row; }
 }
+
+/* EXTENSION CSS */
+.ext-panel { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--off-white); }
+.ext-header { background: var(--off-white); border-bottom: 2px solid var(--ink); display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
+.ext-header--panel { padding: 12px 16px; }
+.ext-panel-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.ext-chat { display: flex; flex-direction: column; gap: 12px; }
+.ext-bubble { max-width: 90%; padding: 10px 14px; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); font-size: 13px; line-height: 1.4; word-break: break-word; }
+.ext-bubble--user { background: var(--sand); align-self: flex-end; }
+.ext-bubble--assistant { background: var(--mist); align-self: flex-start; }
+.ext-bubble--ai { background: var(--mist); align-self: flex-start; }
+.ext-prompt { border-top: 2px solid var(--ink); display: flex; padding: 12px 16px; gap: 8px; background: var(--mist); }
+.ext-prompt input, .ext-prompt textarea { flex: 1; background: var(--off-white); border: 2px solid var(--ink); padding: 8px 12px; font-family: inherit; font-size: 13px; min-width: 0; outline: none; }
+.ext-prompt input:focus, .ext-prompt textarea:focus { box-shadow: 2px 2px 0 var(--ink); }
+.ext-prompt button { background: var(--amber); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0 12px; }
+.ext-prompt button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.ext-context { background: var(--sand); border: 2px solid var(--ink); padding: 10px; font-size: 11px; max-height: 100px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; }
+.ext-context-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; font-size: 9px; letter-spacing: 0.05em; }
+.ext-context-btn { background: var(--off-white); border: 1px solid var(--ink); padding: 4px 8px; font-size: 9px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+.ext-context-btn:hover { background: var(--mist); }
