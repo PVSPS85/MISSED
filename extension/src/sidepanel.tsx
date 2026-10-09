@@ -57,6 +57,26 @@ function RealSidepanel() {
     }
   };
 
+  const analyzeContext = async () => {
+    setStatus("loading");
+    try {
+      const res = await fetch("http://127.0.0.1:8443/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawText: context, sourceType: "paste" })
+      });
+      const data = await res.json();
+      if (data.jobId) {
+        chrome.tabs.create({ url: `http://localhost:5173/?jobId=${data.jobId}` });
+        setStatus("ready");
+      } else {
+        setStatus("error");
+      }
+    } catch (e) {
+      setStatus("error");
+    }
+  };
+
   return (
     <div className="ext-panel">
       <header className="ext-header ext-header--panel">
@@ -83,7 +103,10 @@ function RealSidepanel() {
           <div className="ext-context">
             <div className="ext-context-header">
               <span>Page Context ({context.length} chars)</span>
-              <button className="ext-context-btn" onClick={() => setContext("")}>Clear</button>
+              <div style={{display: 'flex', gap: '4px'}}>
+                <button className="ext-context-btn" onClick={analyzeContext} disabled={status === 'loading'}>Full Analysis</button>
+                <button className="ext-context-btn" onClick={() => setContext("")}>Clear</button>
+              </div>
             </div>
             {context.slice(0, 200)}...
           </div>
