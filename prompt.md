@@ -273,4 +273,16 @@ Although the backend `PORT` was successfully reconfigured to `8443` in the root 
 **Fix:**
 Updated `frontend/vite.config.ts` by explicitly configuring `envDir: '../'` in the `defineConfig` block. This forces Vite to correctly traverse up one directory to read the workspace-level `.env` configuration, cleanly injecting `VITE_API_URL=http://127.0.0.1:8443`.
 
-The application has been re-verified locally and the End-to-End processing flow now flawlessly maps the real local inference to the Dashboard UI!
+## Section 21 — Targeted Dashboard Bug Fix: Finding Labels and Evidence Explorer
+
+**Observed Bug 1: Extracted Findings Display Unknown Values**
+The "Extracted Findings" dashboard section was displaying `Unknown Finding` and `Unknown description` for all three Attention Radar items (ACT NOW, RESPONSE NEEDED, KEEP IN MIND). 
+*Root Cause:* We inspected the Ollama debug logs and discovered that the prompt instructions provided literal empty strings `""` in the schema for `title`, `description`, and `reason`. The model took this literally and output empty strings. Our defensive backend sanitizer then accurately flagged `""` as missing and safely injected "Unknown Finding".
+*Fix:* We updated the LLM prompt in `ollamaProvider.ts` to use explicit descriptive text (e.g. `"Urgent task title"`, `"What needs to happen right now"`) in the schema instead of empty strings. We also fortified the ID validator in `routes/analysis.ts` to cleanly strip spurious leading colons (`:`) that the model occasionally appended to `evidenceIds`.
+
+**Observed Bug 2: Evidence Explorer Does Not Show Selected Source**
+Clicking the "VIEW EVIDENCE" button on a finding did not update the "07 Evidence Explorer" section at the bottom of the page; it only opened an overlapping floating side drawer that created a confusing secondary UI.
+*Root Cause:* The UI maintained two disjointed components (an empty div for Section 07, and a completely separate floating `source-drawer`). The "OPEN SOURCE PANEL" button and "VIEW EVIDENCE" buttons incorrectly opened the drawer instead of mapping the selected state to the dedicated dashboard section.
+*Fix:* Removed the separate `source-drawer` layout entirely, along with its redundant React state (`drawerOpen`). Restructured Section 07 to conditionally render the `<EvidenceDetail finding={selectedFinding} />` component directly inline when a finding is selected. This seamlessly funnels the selected context, explicit fact/interpretation label, and sender/timestamp data natively into the dashboard grid layout.
+
+The End-to-End pipeline builds cleanly and handles real AI findings without error.

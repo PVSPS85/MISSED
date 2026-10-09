@@ -82,6 +82,10 @@ router.post('/analyze', async (req, res) => {
           resultData.radar.responseNeeded = resultData.radar.responseNeeded || [];
           resultData.radar.keepInMind = resultData.radar.keepInMind || [];
         }
+        // DEBUG: Log raw radar findings to diagnose field mapping
+        console.log('[DEBUG] Raw radar actNow:', JSON.stringify(resultData.radar?.actNow?.[0], null, 2));
+        console.log('[DEBUG] Raw radar responseNeeded:', JSON.stringify(resultData.radar?.responseNeeded?.[0], null, 2));
+        console.log('[DEBUG] Raw radar keepInMind:', JSON.stringify(resultData.radar?.keepInMind?.[0], null, 2));
         if (!resultData.summary) resultData.summary = {};
         if (!resultData.summary.overview || typeof resultData.summary.overview !== 'string') resultData.summary.overview = 'No overview provided.';
         if (!resultData.summary.majorTopics || !Array.isArray(resultData.summary.majorTopics)) resultData.summary.majorTopics = [];
@@ -135,7 +139,7 @@ router.post('/analyze', async (req, res) => {
 
         // Verify evidence IDs against original messages
         const validIds = new Set(parsedText.map(m => m.id));
-        const filterValidEvidence = (ids: string[]) => ids.filter(id => {
+        const filterValidEvidence = (ids: string[]) => ids.map(id => id.startsWith(':') ? id.substring(1) : id).filter(id => {
           const isValid = validIds.has(id);
           if (!isValid) console.warn(`Stripped invalid evidence ID: ${id}`);
           return isValid;

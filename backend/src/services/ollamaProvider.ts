@@ -91,15 +91,15 @@ ${question}
 
 You MUST respond strictly in valid JSON matching this schema structure:
 {
-  "summary": { "overview": "", "majorTopics": [ { "topic": "", "points": [""], "evidenceIds": ["<id>"] } ], "participants": [""], "totalMessages": 0, "timespan": { "start": "", "end": "" } },
+  "summary": { "overview": "A brief overview", "majorTopics": [ { "topic": "Topic Name", "points": ["Key point"], "evidenceIds": ["<id>"] } ], "participants": ["Name"], "totalMessages": 0, "timespan": { "start": "Time", "end": "Time" } },
   "radar": { 
-    "actNow": [ { "id": "uuid", "category": "ACT_NOW", "title": "", "description": "", "reason": "", "evidenceIds": ["<id>"] } ],
-    "responseNeeded": [ { "id": "uuid", "category": "RESPONSE_NEEDED", "title": "", "description": "", "reason": "", "evidenceIds": ["<id>"] } ],
-    "keepInMind": [ { "id": "uuid", "category": "KEEP_IN_MIND", "title": "", "description": "", "reason": "", "evidenceIds": ["<id>"] } ]
+    "actNow": [ { "id": "uuid", "category": "ACT_NOW", "title": "Urgent task title", "description": "What needs to happen right now", "reason": "Why it is urgent", "evidenceIds": ["<id>"] } ],
+    "responseNeeded": [ { "id": "uuid", "category": "RESPONSE_NEEDED", "title": "Question or block title", "description": "What needs a response", "reason": "Why it is blocking", "evidenceIds": ["<id>"] } ],
+    "keepInMind": [ { "id": "uuid", "category": "KEEP_IN_MIND", "title": "Important context title", "description": "What to remember", "reason": "Why it is important", "evidenceIds": ["<id>"] } ]
   },
-  "actionItems": [ { "id": "uuid", "task": "", "owner": "name or null", "ownerConfidence": "explicit", "deadline": "date or null", "deadlineType": "explicit", "priority": "normal", "evidenceIds": ["<id>"], "rawQuote": "" } ],
-  "decisions": [ { "id": "uuid", "topic": "", "decision": "", "status": "confirmed", "evidenceIds": ["<id>"] } ],
-  "unansweredQuestions": [ { "id": "uuid", "question": "", "askedBy": "", "evidenceIds": ["<id>"] } ]
+  "actionItems": [ { "id": "uuid", "task": "Task description", "owner": "Name or null", "ownerConfidence": "explicit", "deadline": "Date or null", "deadlineType": "explicit", "priority": "normal", "evidenceIds": ["<id>"], "rawQuote": "Quote" } ],
+  "decisions": [ { "id": "uuid", "topic": "Decision topic", "decision": "What was decided", "status": "confirmed", "evidenceIds": ["<id>"] } ],
+  "unansweredQuestions": [ { "id": "uuid", "question": "The question asked", "askedBy": "Name", "evidenceIds": ["<id>"] } ]
 }
 
 IMPORTANT: Only use exact [ID: ...] values from the context in your evidenceIds arrays. Do NOT invent IDs. Do NOT wrap the JSON in markdown blocks like \`\`\`json. Output ONLY raw JSON.

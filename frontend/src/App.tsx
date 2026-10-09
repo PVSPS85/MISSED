@@ -121,10 +121,12 @@ function Header({
   contextTitle,
   current,
   setCurrent,
+  analysisResult,
 }: {
   contextTitle?: string
   current: string
   setCurrent: (value: "landing" | "workspace" | "extension") => void
+  analysisResult?: AnalysisResult | null
 }) {
   if (current === "workspace") {
     return (
@@ -142,7 +144,7 @@ function Header({
         </div>
         <div className="workspace-header__status">
           <span className="micro-label">ANALYSIS STATUS</span>
-          <strong>ENGINE UNAVAILABLE</strong>
+          <strong>{analysisResult ? "ANALYSIS COMPLETE" : "ENGINE UNAVAILABLE"}</strong>
         </div>
         <PrivacyPill />
         <button
@@ -689,7 +691,6 @@ function Workspace({
   analysisResult?: AnalysisResult | null
 }) {
   const [activeFilter, setActiveFilter] = useState("All findings")
-  const [drawerOpen, setDrawerOpen] = useState(false)
   const [deleteConfirming, setDeleteConfirming] = useState(false)
   const [search, setSearch] = useState("")
   const [sort, setSort] = useState("Newest source")
@@ -902,15 +903,17 @@ function Workspace({
                 (finding) => finding.priority === priority,
               )
               return (
-                <details className={`radar-row ${className}`} key={title}>
+                <details className={`radar-row ${className}`} key={title} open={!!analysisResult && radarFindings.length > 0}>
                   <summary>
                     <span className="radar-arrow">↗</span>
                     <div>
                       <strong>{title}</strong>
                       <p>
-                        {previewResults
-                          ? "Illustrative sample findings"
-                          : "Findings appear after genuine analysis."}
+                        {analysisResult
+                          ? `${radarFindings.length} verified finding${radarFindings.length !== 1 ? 's' : ''}`
+                          : previewResults
+                            ? "Illustrative sample findings"
+                            : "Findings appear after genuine analysis."}
                       </p>
                     </div>
                     <span className="radar-count">
@@ -924,7 +927,6 @@ function Workspace({
                           key={finding.finding}
                           onClick={() => {
                             setSelectedFinding(finding)
-                            setDrawerOpen(true)
                           }}
                           type="button"
                         >
@@ -970,7 +972,6 @@ function Workspace({
                         className="button--outline"
                         onClick={() => {
                           setSelectedFinding(finding)
-                          setDrawerOpen(true)
                         }}
                       >
                         VIEW EVIDENCE
@@ -1049,7 +1050,6 @@ function Workspace({
                     className="button--outline"
                     onClick={() => {
                       setSelectedFinding(finding)
-                      setDrawerOpen(true)
                     }}
                   >
                     VIEW EVIDENCE
@@ -1092,7 +1092,6 @@ function Workspace({
                     className="button--outline"
                     onClick={() => {
                       setSelectedFinding(finding)
-                      setDrawerOpen(true)
                     }}
                   >
                     VIEW EVIDENCE
@@ -1129,7 +1128,6 @@ function Workspace({
                     className="button--outline"
                     onClick={() => {
                       setSelectedFinding(finding)
-                      setDrawerOpen(true)
                     }}
                   >
                     VIEW EVIDENCE
@@ -1154,21 +1152,19 @@ function Workspace({
               <span className="panel-index">07</span>
               <p className="overline">EVIDENCE EXPLORER</p>
             </div>
-            <button
-              className="text-action"
-              onClick={() => setDrawerOpen(true)}
-              type="button"
-            >
-              OPEN SOURCE PANEL <Icon name="arrow" size={17} />
-            </button>
           </div>
-          <div className="evidence-empty">
-            <div className="quote-mark">“</div>
-            <p>
-              Select any finding to inspect the original message, surrounding
-              context, and confidence label.
-            </p>
-          </div>
+          
+          {selectedFinding ? (
+            <EvidenceDetail finding={selectedFinding} />
+          ) : (
+            <div className="evidence-empty">
+              <div className="quote-mark">“</div>
+              <p>
+                Select any finding to inspect the original message, surrounding
+                context, and confidence label.
+              </p>
+            </div>
+          )}
         </section>
       </div>
 
@@ -1186,32 +1182,6 @@ function Workspace({
             CLEAR SEARCH
           </Button>
         </section>
-      )}
-
-      {drawerOpen && (
-        <>
-          <button
-            aria-label="Close drawer"
-            className="drawer-backdrop"
-            onClick={() => setDrawerOpen(false)}
-            type="button"
-          />
-          <aside className="source-drawer">
-            <div className="drawer-head">
-              <div>
-                <p className="overline">SOURCE MESSAGE</p>
-                <h2>EVIDENCE DETAIL</h2>
-              </div>
-              <button onClick={() => setDrawerOpen(false)} type="button">
-                CLOSE ×
-              </button>
-            </div>
-            <EvidenceDetail finding={selectedFinding} />
-            <div className="drawer-footer">
-              <PrivacyPill />
-            </div>
-          </aside>
-        </>
       )}
 
       {previewResults && (
@@ -2012,6 +1982,7 @@ export default function App() {
           contextTitle={fileName || (paste.trim() ? "Pasted conversation" : "")}
           current={view}
           setCurrent={setView}
+          analysisResult={analysisResult}
         />
       )}
       {view === "progress" && (
