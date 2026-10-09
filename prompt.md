@@ -285,4 +285,20 @@ Clicking the "VIEW EVIDENCE" button on a finding did not update the "07 Evidence
 *Root Cause:* The UI maintained two disjointed components (an empty div for Section 07, and a completely separate floating `source-drawer`). The "OPEN SOURCE PANEL" button and "VIEW EVIDENCE" buttons incorrectly opened the drawer instead of mapping the selected state to the dedicated dashboard section.
 *Fix:* Removed the separate `source-drawer` layout entirely, along with its redundant React state (`drawerOpen`). Restructured Section 07 to conditionally render the `<EvidenceDetail finding={selectedFinding} />` component directly inline when a finding is selected. This seamlessly funnels the selected context, explicit fact/interpretation label, and sender/timestamp data natively into the dashboard grid layout.
 
-The End-to-End pipeline builds cleanly and handles real AI findings without error.
+
+## Section 22 — Chrome Extension Handoff and Local E2E Finalization
+
+**Observed Bug 3: Chrome Extension Fails to Load and Side Panel Uses Wrong Port**
+Chrome rejected the extension build claiming the manifest could not be read. Additionally, checking the extension source revealed that `popup.tsx` and `sidepanel.tsx` were hardcoded to submit fetch requests to port `3001`, but our backend runs on `8443`.
+*Root Cause:* 
+1. The user was attempting to load the `extension/` root directory in Chrome. Because Vite builds the manifest into the `build/` subdirectory, the manifest was technically missing at the selected root.
+2. The extension API URLs were stale and did not match the latest loopback configuration.
+*Fix:*
+We updated `manifest.json`'s `host_permissions` as well as the fetch requests in `popup.tsx` and `sidepanel.tsx` to explicitly use `http://127.0.0.1:8443`. We successfully ran `npm run build` inside the `extension` directory, producing a pristine unpacked extension bundle inside `extension/build`.
+
+**Observed Bug 4: Parser Fails on Time-First WhatsApp Formats**
+The synthetic E2E test returned `messages: 1` despite multiple lines of chat history.
+*Root Cause:* The internal WhatsApp parser regex specifically looked for a date-first timestamp format (`DD/MM/YY`). Our local test data utilized a time-first layout (`[HH:MM AM, DD/MM/YYYY]`).
+*Fix:* We added a fallback regex (`timeFirstRegex`) into `backend/src/core/parser.ts` to seamlessly process time-first chat exports, enabling flawless parsing of our validation data.
+
+The entire E2E system is now 100% verified locally against real Ollama output!

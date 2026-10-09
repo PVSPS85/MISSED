@@ -31,7 +31,7 @@ function RealPopup() {
           if (results && results[0]) {
             const text = results[0].result;
             try {
-              const res = await fetch("http://127.0.0.1:3001/api/analyze", {
+              const res = await fetch("http://127.0.0.1:8443/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ rawText: text, sourceType: "paste" })

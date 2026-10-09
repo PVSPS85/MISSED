@@ -19,6 +19,8 @@ export function parseConversation(text: string): SourceMessage[] {
   // We use a flexible regex that extracts the timestamp block and the sender block if available.
   const regex = /^\[?(\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4},?\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s+[aApP][mM])?)\]?[ -]+([^:]+):\s*(.*)$/;
   const systemRegex = /^\[?(\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4},?\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s+[aApP][mM])?)\]?[ -]+(.*)$/;
+  // Format 4: [HH:MM AM, DD/MM/YYYY] Sender: Message (WhatsApp export format)
+  const timeFirstRegex = /^\[?(\d{1,2}:\d{2}(?::\d{2})?\s*(?:[aApP][mM])?,?\s+\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4})\]?\s+([^:]+):\s*(.*)$/;
 
   let currentMsg: SourceMessage | null = null;
   let index = 0;
@@ -27,7 +29,7 @@ export function parseConversation(text: string): SourceMessage[] {
     const line = rawLine.trimRight();
     if (!line) continue;
 
-    const match = line.match(regex);
+    const match = line.match(regex) || line.match(timeFirstRegex);
     
     if (match) {
       // New message

@@ -10,8 +10,8 @@
     "scripting"
   ],
   "host_permissions": [
-    "http://127.0.0.1:3001/*",
-    "http://localhost:3001/*"
+    "http://127.0.0.1:8443/*",
+    "http://localhost:8443/*"
   ],
   "action": {
     "default_popup": "popup.html",

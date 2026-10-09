@@ -18,7 +18,7 @@ function RealSidepanel() {
     try {
       // In a real implementation, we would pass the conversation context.
       // Since it's a hackathon demo and we have limited time, we'll query the local backend chat API directly.
-      const response = await fetch("http://127.0.0.1:3001/api/chat", {
+      const response = await fetch("http://127.0.0.1:8443/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: msg, context: "Context missing in demo" })
