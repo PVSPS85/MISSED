@@ -1,5 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react"
 import ExtensionSuite from "./Extension"
+import { ClientAnalysisService } from "./services/analysisService"
+import { AnalysisResult } from "@shared/types"
 
 type IconName = "arrow" | "check" | "chevron" | "clock" | "file" | "filter" | "lock" | "message" | "plus" | "search" | "send" | "spark" | "trash" | "upload"
 
@@ -582,6 +584,91 @@ function PreviewResults() {
   )
 }
 
+function mapAnalysisToDashboardFindings(result: AnalysisResult): DashboardFinding[] {
+  const findings: DashboardFinding[] = []
+  
+  // A helper to grab source text from evidenceStore or messages
+  const getSourceDetails = (evidenceIds: string[]) => {
+    const id = evidenceIds[0]
+    if (!id) return { sourceText: "No source provided", sender: "Unknown", timestamp: "" }
+    
+    // Check evidence store (if populated by backend)
+    const ev = result.evidenceStore?.[id]
+    if (ev) return { sourceText: ev.messageText, sender: ev.sender || "Unknown", timestamp: ev.timestamp || "" }
+    
+    // Check original messages array directly
+    const msg = result.messages?.find(m => m.id === id)
+    if (msg) return { sourceText: msg.text, sender: msg.sender || "Unknown", timestamp: msg.timestamp || "" }
+    
+    return { sourceText: "Source not found in context", sender: "Unknown", timestamp: "" }
+  }
+
+  // Radar findings map closely to priorities
+  const mapRadar = (arr: any[], priority: DashboardFinding["priority"]) => {
+    arr.forEach(f => {
+      const src = getSourceDetails(f.evidenceIds)
+      findings.push({
+        finding: f.title,
+        reason: f.description,
+        sourceText: src.sourceText,
+        sender: src.sender,
+        timestamp: src.timestamp,
+        type: "fact", // radar findings don't specify interpretation out of the box in this schema, default to fact
+        category: "Mentions", // fallback category for general findings
+        priority
+      })
+    })
+  }
+
+  mapRadar(result.radar.actNow, "Act now")
+  mapRadar(result.radar.responseNeeded, "Response needed")
+  mapRadar(result.radar.keepInMind, "Keep in mind")
+
+  result.actionItems.forEach(a => {
+    const src = getSourceDetails(a.evidenceIds)
+    findings.push({
+      finding: a.task,
+      reason: `Owner: ${a.owner || 'Unassigned'} | Deadline: ${a.deadline || 'None'}`,
+      sourceText: src.sourceText,
+      sender: src.sender,
+      timestamp: src.timestamp,
+      type: a.ownerConfidence === 'inferred' ? "interpretation" : "fact",
+      category: "Actions",
+      priority: a.priority === 'urgent' ? "Act now" : a.priority === 'high' ? "Response needed" : "Keep in mind"
+    })
+  })
+
+  result.decisions.forEach(d => {
+    const src = getSourceDetails(d.evidenceIds)
+    findings.push({
+      finding: d.decision,
+      reason: `Topic: ${d.topic}`,
+      sourceText: src.sourceText,
+      sender: src.sender,
+      timestamp: src.timestamp,
+      type: "fact",
+      category: "Decisions",
+      priority: "Keep in mind"
+    })
+  })
+
+  result.unansweredQuestions.forEach(q => {
+    const src = getSourceDetails(q.evidenceIds)
+    findings.push({
+      finding: q.question,
+      reason: `Asked by: ${q.askedBy}`,
+      sourceText: src.sourceText,
+      sender: src.sender,
+      timestamp: src.timestamp,
+      type: "fact",
+      category: "Questions",
+      priority: "Response needed"
+    })
+  })
+
+  return findings
+}
+
 function Workspace({
   fileName,
   hasInput,
@@ -590,6 +677,7 @@ function Workspace({
   onInspectProgress,
   onImport,
   previewResults,
+  analysisResult,
 }: {
   fileName: string
   hasInput: boolean
@@ -598,6 +686,7 @@ function Workspace({
   onInspectProgress: () => void
   onImport: () => void
   previewResults: boolean
+  analysisResult?: AnalysisResult | null
 }) {
   const [activeFilter, setActiveFilter] = useState("All findings")
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -608,7 +697,7 @@ function Workspace({
     useState<EvidenceFinding | null>(null)
   const sourceName =
     fileName || (hasInput ? "Pasted conversation" : "No conversation imported")
-  const availableFindings = previewResults ? previewFindings : []
+  const availableFindings = analysisResult ? mapAnalysisToDashboardFindings(analysisResult) : (previewResults ? previewFindings : [])
   const filteredFindings = availableFindings.filter((finding) => {
     const matchesCategory =
       activeFilter === "All findings" || finding.category === activeFilter
@@ -1697,6 +1786,10 @@ export default function App() {
   const [designPreview, setDesignPreview] = useState(false)
   const [analysisState, setAnalysisState] =
     useState<AnalysisProgressState>(unavailableAnalysis)
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
+  
+  const analysisService = useRef(new ClientAnalysisService())
+  const pollTimer = useRef<number | null>(null)
 
   const hasInput = Boolean(fileText.trim() || paste.trim())
   useEffect(() => {
@@ -1737,7 +1830,7 @@ export default function App() {
     }
   }
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!hasInput) {
       setImportStatus("invalid")
       setImportMessage(
@@ -1745,11 +1838,76 @@ export default function App() {
       )
       return
     }
-    setImportStatus("idle")
-    setImportMessage("")
-    setAnalysisState(unavailableAnalysis)
-    setView("progress")
+    setImportStatus("processing")
+    setImportMessage("Starting analysis...")
+    
+    try {
+      const { jobId } = await analysisService.current.submitConversation({
+        rawText: fileText || paste,
+        sourceType: fileText ? "upload" : "paste",
+        fileName: fileName || undefined
+      })
+      
+      setImportStatus("idle")
+      setImportMessage("")
+      setAnalysisState({ phase: "processing", stages: Array(5).fill("pending"), activity: "Initializing..." })
+      setView("progress")
+      
+      // Start polling
+      if (pollTimer.current) window.clearInterval(pollTimer.current)
+      
+      pollTimer.current = window.setInterval(async () => {
+        try {
+          const status = await analysisService.current.getJobStatus(jobId)
+          
+          const mappedStages = status.stages.map(s => s.state)
+          
+          if (status.isFailed) {
+            if (pollTimer.current) window.clearInterval(pollTimer.current)
+            setAnalysisState({
+              phase: status.errorMessage?.includes("AI Service is currently unavailable") ? "unavailable" : "failed",
+              stages: mappedStages as any,
+              activity: status.errorMessage || "Processing failed.",
+            })
+          } else if (status.isCompleted) {
+            if (pollTimer.current) window.clearInterval(pollTimer.current)
+            setAnalysisState({
+              phase: "complete",
+              stages: mappedStages as any,
+              activity: "Analysis complete.",
+            })
+            // Fetch result
+            try {
+              const result = await analysisService.current.getJobResult(jobId)
+              setAnalysisResult(result)
+            } catch (err) {
+              setAnalysisState({ phase: "failed", stages: mappedStages as any, activity: "Failed to fetch result." })
+            }
+          } else {
+            setAnalysisState({
+              phase: "processing",
+              stages: mappedStages as any,
+              activity: status.stages.find(s => s.state === 'active')?.label || "Processing...",
+            })
+          }
+        } catch (err) {
+          if (pollTimer.current) window.clearInterval(pollTimer.current)
+          setAnalysisState({ phase: "failed", stages: Array(5).fill("failed"), activity: "Network error while polling." })
+        }
+      }, 2000)
+      
+    } catch (err: any) {
+      setImportStatus("error")
+      setImportMessage(err.message || "Failed to start analysis.")
+    }
   }
+
+  // Cleanup poll on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimer.current) window.clearInterval(pollTimer.current)
+    }
+  }, [])
 
   return (
     <div className="app-shell">
@@ -1799,11 +1957,17 @@ export default function App() {
             setFileText("")
             setPaste("")
             setImportStatus("idle")
+            setAnalysisResult(null)
+            setView("landing")
           }}
           onExitPreview={() => setDesignPreview(false)}
           onInspectProgress={() => setView("progress")}
           onImport={() => setView("landing")}
           previewResults={designPreview}
+          // Assuming Workspace can take an analysisResult prop if we update it.
+          // For now, if the original Workspace does not take it, we might need to modify Workspace too.
+          // But looking at Workspace props earlier, it didn't take data. Let's pass it anyway.
+          analysisResult={analysisResult}
         />
       )}
       {view === "extension" && (
