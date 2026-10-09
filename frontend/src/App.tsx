@@ -1920,6 +1920,7 @@ export default function App() {
       setImportStatus("idle")
       setFileName("Context passed from extension")
       setView("progress")
+      setAnalysisState(prev => ({ ...prev, phase: "analyzing", activity: "Connecting to existing analysis job..." }))
       
       // Start polling
       if (pollTimer.current) window.clearInterval(pollTimer.current)
@@ -1946,12 +1947,13 @@ export default function App() {
             try {
               const result = await analysisService.current.getAnalysisResult(urlJobId)
               setAnalysisResult(result)
+              setView("workspace")
             } catch (err) {
               setAnalysisState({ phase: "failed", stages: mappedStages as any, activity: "Failed to fetch result." })
             }
           } else {
             setAnalysisState({
-              phase: "processing",
+              phase: "analyzing",
               stages: mappedStages as any,
               activity: status.stages.find(s => s.state === 'active')?.label || "Processing...",
             })
