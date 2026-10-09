@@ -1968,8 +1968,6 @@ export default function App() {
         }
       }, 2000)
       
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname)
     }
     
     return () => {
