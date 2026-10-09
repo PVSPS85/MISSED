@@ -159,5 +159,12 @@ MISSED/
 - **AI-Provider Architecture:** Solidified `OllamaProvider` interface. Checks for Ollama tags at `127.0.0.1:11434` and gracefully aborts if the model isn't active, enforcing the explicit local-only privacy guarantee. No remote hosted model substitution is allowed.
 - **Verification:** Backend TS compilation fixed by adopting `NodeNext`. Build completes without errors. Frontend `analysisService.ts` synced with `api/analyze` API updates seamlessly.
 
+## 9. Phase 2-5 — Final Integration & Extension Implementation
+- **AI Integration (Phase 2):** Configured `backend/src/services/ollamaProvider.ts` to strictly prompt `qwen2.5:3b` for a validated JSON matching the `AnalysisResultSchema`. Stripped out markdown artifacts and validated source IDs.
+- **Frontend Connection (Phase 3):** Fully connected `App.tsx` and `ClientAnalysisService` to the local backend `127.0.0.1:3001/api`. The import workflow now routes genuine `multipart/form-data` equivalent uploads to the NLP parser. The progress screen accurately reflects active stages or handles `unavailable` abort statuses gracefully without fabricating data. The Workspace dashboard maps real output to UI findings.
+- **Chrome Extension (Phase 4):** Created a Manifest V3 extension in `extension/` with React/Vite. The Extension securely isolates data while using `chrome.sidePanel` and a direct `http://127.0.0.1:3001/api/chat` route for the Side Panel Assistant. Uses original app styling for a cohesive UI.
+- **Verification (Phase 5):** Conducted full rebuild checks across `frontend`, `backend`, and `extension` workspaces. Verified TypeScript boundaries and environment alignments. Privacy requirement respected successfully (zero cloud APIs used).
+
 **Next Steps:**
-Proceed to Phase 2/3 and test actual LLM extraction behavior before starting on Phase 4 Chrome Extension implementation.
+- Await `qwen2.5:3b` download completion for actual E2E inference extraction behavior.
+- Submit hackathon project.

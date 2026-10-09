@@ -58,9 +58,16 @@ MISSED. provides an evidence-first, neo-brutalist workspace that extracts what m
 - Modular AI provider architecture (`AIProvider`).
 - Ollama local model integration (`http://127.0.0.1:11434`) configured to safely detect availability without fabricating responses.
 
-### Planned for Next Phase (Extension)
-- Extension Manifest V3 background scripts and content extraction.
-- End-to-End LLM prompt refinement for rigorous JSON schema compliance.
+### Extension Service (Implemented)
+- Chrome Extension Manifest V3 package.
+- Action Popup and Side Panel React/Vite application.
+- Integrates securely with local `127.0.0.1:3001` backend for context-aware chat.
+
+### Verification (Implemented)
+- Strict validation across all APIs using `zod`.
+- Frontend connects strictly to local backend via `/api/analyze`.
+- Fallbacks correctly when local LLM is missing, preserving privacy.
+
 ---
 
 ## 3. Current Folder Structure
