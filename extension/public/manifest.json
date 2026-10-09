@@ -11,7 +11,8 @@
   ],
   "host_permissions": [
     "http://127.0.0.1:8443/*",
-    "http://localhost:8443/*"
+    "http://localhost:8443/*",
+    "<all_urls>"
   ],
   "action": {
     "default_popup": "popup.html",
