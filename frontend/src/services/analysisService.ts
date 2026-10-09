@@ -21,7 +21,7 @@ export const INITIAL_STAGES: StageStatus[] = [
 ];
 
 export class ClientAnalysisService implements AnalysisServiceContract {
-  private baseUrl = 'http://localhost:3001/api';
+  private baseUrl = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001') + '/api';
 
   async submitConversation(input: ConversationInput): Promise<{ jobId: string }> {
     const response = await fetch(`${this.baseUrl}/analyze`, {

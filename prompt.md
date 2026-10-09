@@ -238,4 +238,17 @@ All endpoints live on `127.0.0.1:3001` to enforce privacy.
 
 The project is fully complete and ready for judging!
 
-The project demonstrates sophisticated AI-assisted engineering: we used iterative, constraint-bound prompting to stitch a Figma-designed React frontend to a locally bound Express/Zod backend and a Manifest V3 Chrome Extension. We explicitly enforced privacy (loopback-only binding) and strictly avoided fabricating results while the required AI model downloads. Every component is integrated, structurally sound, and meticulously documented.
+## Section 18 — Critical Bug Fix: Network Polling Mismatch
+
+**Observed Bug:** 
+After submitting a conversation, the UI displayed "Network error while polling" and falsely marked all 5 processing stages as failed.
+
+**Root Causes & Fixes:**
+1. **Frontend Configuration Mismatch:** The `ClientAnalysisService` in the frontend had a hardcoded `http://localhost:3001/api` URL, while the backend was actually configured (via `.env`) to run on port `8443`. When running `npm run dev`, this caused immediate network polling failures because the server on `3001` didn't exist or rejected cross-origin `localhost` vs `127.0.0.1` IPv6 bindings.
+   *Fix:* Updated the frontend service to read `import.meta.env.VITE_API_URL`, falling back to `127.0.0.1:3001`.
+2. **TypeScript Contract Mismatch:** The `App.tsx` polling logic was calling `getJobStatus()` and `getJobResult()`, but the implemented `AnalysisServiceContract` methods were `getAnalysisStatus()` and `getAnalysisResult()`. Vite's fast build ignored these type errors.
+   *Fix:* Updated `App.tsx` to correctly call `getAnalysisStatus()` and `getAnalysisResult()`.
+3. **Destructive UI Error Handling:** The progress screen's `catch` block on a network error was destructively rewriting all 5 processing stages to `failed` using `Array(5).fill("failed")`.
+   *Fix:* Updated `App.tsx` to use functional state updates (`prev => { ...prev }`) on network errors to preserve the last known valid stage states while reporting the connection failure.
+
+The application has been re-verified locally and the End-to-End processing flow perfectly handles the local inference pipeline over loopback.

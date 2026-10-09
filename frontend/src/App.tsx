@@ -1858,7 +1858,7 @@ export default function App() {
       
       pollTimer.current = window.setInterval(async () => {
         try {
-          const status = await analysisService.current.getJobStatus(jobId)
+          const status = await analysisService.current.getAnalysisStatus(jobId)
           
           const mappedStages = status.stages.map(s => s.state)
           
@@ -1878,7 +1878,7 @@ export default function App() {
             })
             // Fetch result
             try {
-              const result = await analysisService.current.getJobResult(jobId)
+              const result = await analysisService.current.getAnalysisResult(jobId)
               setAnalysisResult(result)
             } catch (err) {
               setAnalysisState({ phase: "failed", stages: mappedStages as any, activity: "Failed to fetch result." })
@@ -1890,9 +1890,13 @@ export default function App() {
               activity: status.stages.find(s => s.state === 'active')?.label || "Processing...",
             })
           }
-        } catch (err) {
+        } catch (err: any) {
           if (pollTimer.current) window.clearInterval(pollTimer.current)
-          setAnalysisState({ phase: "failed", stages: Array(5).fill("failed"), activity: "Network error while polling." })
+          setAnalysisState(prev => ({ 
+            ...prev, 
+            phase: "failed", 
+            activity: err.message || "Network error while polling." 
+          }))
         }
       }, 2000)
       
@@ -1916,7 +1920,7 @@ export default function App() {
       
       pollTimer.current = window.setInterval(async () => {
         try {
-          const status = await analysisService.current.getJobStatus(urlJobId)
+          const status = await analysisService.current.getAnalysisStatus(urlJobId)
           const mappedStages = status.stages.map(s => s.state)
           
           if (status.isFailed) {
@@ -1934,7 +1938,7 @@ export default function App() {
               activity: "Analysis complete.",
             })
             try {
-              const result = await analysisService.current.getJobResult(urlJobId)
+              const result = await analysisService.current.getAnalysisResult(urlJobId)
               setAnalysisResult(result)
             } catch (err) {
               setAnalysisState({ phase: "failed", stages: mappedStages as any, activity: "Failed to fetch result." })
@@ -1946,9 +1950,13 @@ export default function App() {
               activity: status.stages.find(s => s.state === 'active')?.label || "Processing...",
             })
           }
-        } catch (err) {
+        } catch (err: any) {
           if (pollTimer.current) window.clearInterval(pollTimer.current)
-          setAnalysisState({ phase: "failed", stages: Array(5).fill("failed"), activity: "Network error while polling." })
+          setAnalysisState(prev => ({ 
+            ...prev, 
+            phase: "failed", 
+            activity: err.message || "Network error while polling." 
+          }))
         }
       }, 2000)
       
