@@ -262,4 +262,15 @@ Even after successful E2E local inference with `qwen2.5:3b`, the Results Dashboa
 2. **Missing LLM Output Sanitation:** `qwen2.5:3b` occasionally dropped required string fields like `askedBy` or `topic` when analyzing specific text shapes, failing strict Zod validation with `received null` errors and preventing results from loading.
    *Fix:* Expanded backend defensive parsing (`routes/analysis.ts`) to intercept and sanitize ALL nested `RadarFindings`, `ActionItems`, `Decisions`, and `UnansweredQuestions` by supplying safe default strings (`"Unknown"`) before passing them to the strict Zod validators.
 
+## Section 20 — Critical Bug Fix: Frontend "Failed to fetch" (Vite envDir)
+
+**Observed Bug:**
+When submitting a conversation from the frontend, an immediate "Failed to fetch" network error occurred. 
+
+**Root Cause:**
+Although the backend `PORT` was successfully reconfigured to `8443` in the root `.env` file, the Vite frontend process completely ignored it. By default, Vite only looks for `.env` files within its own root directory (`/frontend`), meaning `VITE_API_URL` evaluated to `undefined`. This forced `analysisService.ts` to fall back to the old, hardcoded `http://127.0.0.1:3001` URL—which was dead, resulting in connection refusals.
+
+**Fix:**
+Updated `frontend/vite.config.ts` by explicitly configuring `envDir: '../'` in the `defineConfig` block. This forces Vite to correctly traverse up one directory to read the workspace-level `.env` configuration, cleanly injecting `VITE_API_URL=http://127.0.0.1:8443`.
+
 The application has been re-verified locally and the End-to-End processing flow now flawlessly maps the real local inference to the Dashboard UI!

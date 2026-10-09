@@ -15,4 +15,5 @@ export default defineConfig({
       '@shared': path.resolve(import.meta.dirname, '../shared/src'),
     },
   },
+  envDir: '../',
 })
